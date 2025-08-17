@@ -45,7 +45,7 @@
           <div class="flex justify-end space-x-3">
             <button
               type="button"
-              @click="$router.push('/reports')"
+              @click="router.push('/reports')"
               class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               キャンセル
@@ -316,6 +316,21 @@
 <script setup lang="ts">
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue';
 import { CheckIcon, ExclamationTriangleIcon } from '@heroicons/vue/24/outline';
+import { useRuntimeConfig } from 'nuxt/app';
+import { reactive, ref } from 'vue';
+import { useRouter } from 'vue-router';
+
+// 型定義
+interface AiResult {
+  aiResult: {
+    summary: string;
+    category: string;
+    tags: string[];
+    anonymizedText: string;
+    suggestedReplacements: { from: string; to: string }[];
+  };
+  flags: { containsDisallowed: boolean };
+}
 
 // メタデータ
 definePageMeta({
@@ -331,7 +346,7 @@ const form = reactive({
 const loading = ref(false);
 const showModal = ref(false);
 const showConfirmModal = ref(false);
-const result = ref<any>(null);
+const result = ref<AiResult | null>(null);
 
 // 設定
 const config = useRuntimeConfig();
@@ -381,6 +396,26 @@ const submitReport = async () => {
 // モーダルを閉じる
 const closeModal = () => {
   showModal.value = false;
+  result.value = null;
+};
+
+// 確認モーダルを閉じる
+const closeConfirmModal = () => {
+  showConfirmModal.value = false;
+};
+
+// 匿名化を承認して送信
+const confirmSubmit = () => {
+  showConfirmModal.value = false;
+  showModal.value = true;
+  // フォームをリセット
+  form.title = '';
+  form.body = '';
+};
+
+// 修正のため送信をキャンセル
+const cancelSubmit = () => {
+  showConfirmModal.value = false;
   result.value = null;
 };
 

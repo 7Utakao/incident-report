@@ -306,6 +306,8 @@ import {
   DocumentTextIcon,
   XMarkIcon,
 } from '@heroicons/vue/24/outline';
+import { useRuntimeConfig } from 'nuxt/app';
+import { reactive, ref, onMounted } from 'vue';
 
 // メタデータ
 definePageMeta({
@@ -347,7 +349,7 @@ const config = useRuntimeConfig();
 const { getIdToken } = useIdToken();
 
 // 検索のデバウンス
-let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+let searchTimeout: ReturnType<typeof setTimeout> | undefined = undefined;
 const debounceSearch = () => {
   if (searchTimeout) {
     clearTimeout(searchTimeout);
