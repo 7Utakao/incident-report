@@ -1,0 +1,68 @@
+version: 1
+backend:
+  phases:
+    build:
+      commands:
+        # Lambda関数の依存関係インストール
+        - cd lambda
+        - npm install --production
+        - cd ..
+
+        # Lambda関数のZipファイル作成
+        - cd lambda
+        - zip -r ../incident-report-api-dev.zip . -x "*.git*" "*.DS_Store*"
+        - cd ..
+
+        # AWS CLIでLambda関数を更新（環境変数で制御）
+        - |
+          if [ "$AWS_BRANCH" = "main" ]; then
+            aws lambda update-function-code \
+              --function-name incident-report-api-dev \
+              --zip-file fileb://incident-report-api-dev.zip \
+              --region $AWS_DEFAULT_REGION
+          elif [ "$AWS_BRANCH" = "develop" ]; then
+            aws lambda update-function-code \
+              --function-name incident-report-api-dev-staging \
+              --zip-file fileb://incident-report-api-dev.zip \
+              --region $AWS_DEFAULT_REGION
+          fi
+
+        # Lambda環境変数の更新
+        - |
+          if [ "$AWS_BRANCH" = "main" ]; then
+            aws lambda update-function-configuration \
+              --function-name incident-report-api-dev \
+              --environment Variables="{AI_MODE=$AI_MODE,DDB_REPORTS=$DDB_REPORTS,BEDROCK_REGION=$BEDROCK_REGION,BEDROCK_MODEL_ID=$BEDROCK_MODEL_ID}" \
+              --region $AWS_DEFAULT_REGION
+          elif [ "$AWS_BRANCH" = "develop" ]; then
+            aws lambda update-function-configuration \
+              --function-name incident-report-api-dev-staging \
+              --environment Variables="{AI_MODE=$AI_MODE_STAGING,DDB_REPORTS=$DDB_REPORTS_STAGING,BEDROCK_REGION=$BEDROCK_REGION,BEDROCK_MODEL_ID=$BEDROCK_MODEL_ID}" \
+              --region $AWS_DEFAULT_REGION
+          fi
+
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci
+    build:
+      commands:
+        - npm run build
+  artifacts:
+    baseDirectory: .output/public
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
+      - lambda/node_modules/**/*
+  customHeaders:
+    - pattern: '**/*'
+      headers:
+        - key: 'X-Frame-Options'
+          value: 'DENY'
+        - key: 'X-Content-Type-Options'
+          value: 'nosniff'
+        - key: 'Referrer-Policy'
+          value: 'strict-origin-when-cross-origin'

@@ -1,0 +1,22 @@
+{
+  "name": "incident-report-api-lambda",
+  "version": "1.0.0",
+  "description": "Incident Report API Lambda Function",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "uuid": "^9.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "lambda",
+    "incident-report",
+    "api"
+  ],
+  "author": "",
+  "license": "ISC"
+}
