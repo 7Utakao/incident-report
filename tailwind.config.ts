@@ -10,7 +10,17 @@ export default <Partial<Config>>{
     './nuxt.config.ts',
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        primary: 'rgb(var(--primary) / <alpha-value>)',
+        primaryDeep: 'rgb(var(--primary-deep) / <alpha-value>)',
+        accent1: 'rgb(var(--accent1) / <alpha-value>)',
+        accent2: 'rgb(var(--accent2) / <alpha-value>)',
+        accent3: 'rgb(var(--accent3) / <alpha-value>)',
+        surface: 'rgb(var(--surface) / <alpha-value>)',
+        ink: 'rgb(var(--ink) / <alpha-value>)',
+      },
+    },
   },
   plugins: [],
 };

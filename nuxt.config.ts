@@ -5,6 +5,7 @@ export default defineNuxtConfig({
   ssr: false,
   nitro: { preset: 'aws_amplify' },
   modules: ['@nuxtjs/tailwindcss'],
+  css: ['~/assets/css/tokens.css'],
   runtimeConfig: {
     public: {
       apiUrl: process.env.NUXT_PUBLIC_API_URL || 'http://localhost:3001',

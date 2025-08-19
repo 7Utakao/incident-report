@@ -1,229 +1,240 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <!-- ヒーローセクション -->
-    <div class="bg-white">
-      <div class="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
-        <div class="text-center">
-          <h1 class="text-4xl font-extrabold text-gray-900 sm:text-5xl">Incident Report System</h1>
-          <p class="mt-4 text-xl text-gray-600">
-            チームのインシデントを記録・分析し、知見を共有するシステム
-          </p>
-          <div class="mt-8 flex justify-center space-x-4">
-            <NuxtLink
-              to="/reports/new"
-              class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              <PlusIcon class="h-5 w-5 mr-2" />
-              新規レポート作成
-            </NuxtLink>
-            <NuxtLink
-              to="/reports"
-              class="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              <DocumentTextIcon class="h-5 w-5 mr-2" />
-              レポート一覧
-            </NuxtLink>
-          </div>
+  <div class="min-h-screen bg-background">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Header -->
+      <div class="mb-8">
+        <p class="text-ink/60">
+          {{ COPY.homeSubtitle }}
+        </p>
+      </div>
+
+      <!-- Mascot Banner -->
+      <div class="mb-8">
+        <MascotBanner />
+      </div>
+
+      <!-- Main Content Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Left Column: Level Status -->
+        <div class="space-y-6">
+          <!-- Level Status -->
+          <Card title="レベル状況">
+            <div class="py-6">
+              <LevelBar
+                :level="userLevel"
+                :progress="levelProgress"
+                :reports-to-next="reportsToNextLevel"
+              />
+            </div>
+          </Card>
+        </div>
+
+        <!-- Right Column: Recent Reports -->
+        <div class="space-y-6">
+          <!-- Recent Reports -->
+          <Card title="最近の報告">
+            <div v-if="loading" class="space-y-4">
+              <div v-for="i in 3" :key="i" class="grid grid-cols-[120px_1fr] gap-3">
+                <Skeleton variant="rectangular" width="100" height="24" />
+                <div class="space-y-2">
+                  <Skeleton variant="text" width="80%" />
+                  <Skeleton variant="text" width="60%" />
+                </div>
+              </div>
+            </div>
+
+            <div v-else-if="recentReports.length === 0" class="text-center py-8 text-ink/60">
+              まだ報告がありません
+            </div>
+
+            <div v-else>
+              <ul class="space-y-0">
+                <li
+                  v-for="report in recentReports"
+                  :key="report.id"
+                  class="grid grid-cols-[120px_1fr] gap-3 p-4 hover:bg-primary/10 cursor-pointer transition-colors"
+                  @click="$router.push(`/reports/${report.id}`)"
+                >
+                  <div class="truncate">
+                    <Badge :variant="getCategoryVariant(report.category)" class="text-xs">
+                      {{ report.category }}
+                    </Badge>
+                  </div>
+                  <div>
+                    <div class="font-medium line-clamp-1 text-sm">{{ report.title }}</div>
+                    <div class="text-sm opacity-80 line-clamp-2 mt-1">{{ report.summary }}</div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            <template #footer>
+              <div class="text-center">
+                <Button variant="ghost" @click="$router.push('/reports')">
+                  すべての報告を見る
+                </Button>
+              </div>
+            </template>
+          </Card>
         </div>
       </div>
-    </div>
 
-    <!-- 機能紹介 -->
-    <div class="py-16">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center">
-          <h2 class="text-3xl font-extrabold text-gray-900">主な機能</h2>
-          <p class="mt-4 text-lg text-gray-600">
-            AIを活用したインシデント管理で、チームの学習と改善を支援します
-          </p>
-        </div>
-
-        <div class="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          <!-- AI分析 -->
-          <div class="bg-white rounded-lg shadow p-6">
-            <div
-              class="flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white mx-auto"
+      <!-- Quick Actions -->
+      <div class="mt-8">
+        <Card title="クイックアクション">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Button
+              variant="primary"
+              size="lg"
+              class="w-full"
+              @click="$router.push('/reports/new')"
             >
-              <CpuChipIcon class="h-6 w-6" />
-            </div>
-            <h3 class="mt-4 text-lg font-medium text-gray-900 text-center">AI自動分析</h3>
-            <p class="mt-2 text-sm text-gray-600 text-center">
-              レポート内容を自動分析し、カテゴリ分類・タグ付け・要約を生成します
-            </p>
+              新しい報告を作成
+            </Button>
+            <Button variant="secondary" size="md" class="w-full" @click="$router.push('/reports')">
+              報告一覧を見る
+            </Button>
+            <Button variant="ghost" size="md" class="w-full" @click="$router.push('/dashboard')">
+              ダッシュボード
+            </Button>
           </div>
-
-          <!-- 匿名化 -->
-          <div class="bg-white rounded-lg shadow p-6">
-            <div
-              class="flex items-center justify-center h-12 w-12 rounded-md bg-green-500 text-white mx-auto"
-            >
-              <ShieldCheckIcon class="h-6 w-6" />
-            </div>
-            <h3 class="mt-4 text-lg font-medium text-gray-900 text-center">自動匿名化</h3>
-            <p class="mt-2 text-sm text-gray-600 text-center">
-              個人名・顧客名・連絡先などの機密情報を自動検出・匿名化します
-            </p>
-          </div>
-
-          <!-- 検索・フィルタ -->
-          <div class="bg-white rounded-lg shadow p-6">
-            <div
-              class="flex items-center justify-center h-12 w-12 rounded-md bg-purple-500 text-white mx-auto"
-            >
-              <MagnifyingGlassIcon class="h-6 w-6" />
-            </div>
-            <h3 class="mt-4 text-lg font-medium text-gray-900 text-center">高度な検索</h3>
-            <p class="mt-2 text-sm text-gray-600 text-center">
-              カテゴリ・期間・キーワードでレポートを効率的に検索・絞り込みできます
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 統計情報（モック） -->
-    <div class="bg-white py-16">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center">
-          <h2 class="text-3xl font-extrabold text-gray-900">システム統計</h2>
-        </div>
-
-        <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          <div class="bg-gray-50 overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <DocumentTextIcon class="h-6 w-6 text-gray-400" />
-                </div>
-                <div class="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt class="text-sm font-medium text-gray-500 truncate">総レポート数</dt>
-                    <dd class="text-lg font-medium text-gray-900">{{ stats.totalReports }}</dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="bg-gray-50 overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <CalendarIcon class="h-6 w-6 text-gray-400" />
-                </div>
-                <div class="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt class="text-sm font-medium text-gray-500 truncate">今月のレポート</dt>
-                    <dd class="text-lg font-medium text-gray-900">{{ stats.thisMonth }}</dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="bg-gray-50 overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <TagIcon class="h-6 w-6 text-gray-400" />
-                </div>
-                <div class="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt class="text-sm font-medium text-gray-500 truncate">人気のカテゴリ</dt>
-                    <dd class="text-lg font-medium text-gray-900">{{ stats.topCategory }}</dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="bg-gray-50 overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <ShieldCheckIcon class="h-6 w-6 text-gray-400" />
-                </div>
-                <div class="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt class="text-sm font-medium text-gray-500 truncate">匿名化処理</dt>
-                    <dd class="text-lg font-medium text-gray-900">{{ stats.anonymized }}%</dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- CTA セクション -->
-    <div class="bg-blue-600">
-      <div
-        class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8 lg:flex lg:items-center lg:justify-between"
-      >
-        <h2 class="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-          <span class="block">インシデントを記録して</span>
-          <span class="block text-blue-200">チームの知見を共有しましょう</span>
-        </h2>
-        <div class="mt-8 flex lg:mt-0 lg:flex-shrink-0">
-          <div class="inline-flex rounded-md shadow">
-            <NuxtLink
-              to="/reports/new"
-              class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-blue-600 bg-white hover:bg-blue-50"
-            >
-              今すぐ始める
-            </NuxtLink>
-          </div>
-        </div>
+        </Card>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import {
-  PlusIcon,
-  DocumentTextIcon,
-  CpuChipIcon,
-  ShieldCheckIcon,
-  MagnifyingGlassIcon,
-  CalendarIcon,
-  TagIcon,
-} from '@heroicons/vue/24/outline';
+import { ref, computed, onMounted } from 'vue';
+import { format } from 'date-fns';
+import { ja } from 'date-fns/locale';
+import { COPY } from '~/constants/copy';
 
-// メタデータ
-definePageMeta({
-  title: 'ホーム',
+// Components
+import Card from '~/components/ui/Card.vue';
+import Button from '~/components/ui/Button.vue';
+import Badge from '~/components/ui/Badge.vue';
+import Skeleton from '~/components/ui/Skeleton.vue';
+import MascotBanner from '~/components/mascot/MascotBanner.vue';
+import LevelBar from '~/components/levels/LevelBar.vue';
+
+// Types
+interface Report {
+  id: string;
+  title: string;
+  summary: string;
+  category: string;
+  status: string;
+  createdAt: string;
+}
+
+// Reactive data
+const loading = ref(true);
+const recentReports = ref<Report[]>([]);
+
+// Mock stats data
+const todayReports = ref(3);
+const weekReports = ref(12);
+const totalReports = ref(47);
+const improvementSuggestions = ref(89);
+
+// User level system (mock data)
+const userLevel = ref(4);
+const totalUserReports = ref(47);
+
+const levelTitle = computed(() => {
+  const titles = ['新人', '初級者', '中級者', '上級者', 'エキスパート', 'マスター'];
+  return titles[Math.min(userLevel.value - 1, titles.length - 1)] || 'マスター';
 });
 
-// モック統計データ
-const stats = reactive({
-  totalReports: 156,
-  thisMonth: 23,
-  topCategory: '環境設定ミス',
-  anonymized: 87,
+const levelProgress = computed(() => {
+  const reportsForCurrentLevel = (userLevel.value - 1) * 10;
+  const reportsForNextLevel = userLevel.value * 10;
+  const currentProgress = totalUserReports.value - reportsForCurrentLevel;
+  const levelRange = reportsForNextLevel - reportsForCurrentLevel;
+  return Math.min((currentProgress / levelRange) * 100, 100);
 });
 
-// 実際の統計データを取得する場合の例
-// const loadStats = async () => {
-//   try {
-//     const config = useRuntimeConfig();
-//     const { getIdToken } = useIdToken();
-//     const token = await getIdToken();
-//
-//     const response = await $fetch(`${config.public.apiUrl}/stats`, {
-//       headers: {
-//         'Authorization': token ? `Bearer ${token}` : ''
-//       }
-//     });
-//
-//     Object.assign(stats, response);
-//   } catch (error) {
-//     console.error('統計データ取得エラー:', error);
-//   }
-// };
+const reportsToNextLevel = computed(() => {
+  const reportsForNextLevel = userLevel.value * 10;
+  return Math.max(reportsForNextLevel - totalUserReports.value, 0);
+});
 
-// onMounted(() => {
-//   loadStats();
-// });
+// Methods
+const getCategoryVariant = (
+  category: string,
+): 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'outline' => {
+  const variants: Record<
+    string,
+    'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'outline'
+  > = {
+    '情報漏洩・誤送信': 'error',
+    システム障害: 'warning',
+    作業ミス: 'primary',
+    コミュニケーション: 'secondary',
+    その他: 'default',
+  };
+  return variants[category] || 'default';
+};
+
+const formatDate = (dateString: string) => {
+  return format(new Date(dateString), 'MM/dd HH:mm', { locale: ja });
+};
+
+const fetchRecentReports = async () => {
+  try {
+    loading.value = true;
+    // Mock API call
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // Mock data
+    recentReports.value = [
+      {
+        id: '1',
+        title: '機密資料の誤送信インシデント',
+        summary: '重要な会議資料を間違った取引先に送信してしまいました。',
+        category: '情報漏洩・誤送信',
+        status: '完了',
+        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: '2',
+        title: 'データベース接続エラー',
+        summary: '朝の業務開始時にデータベースに接続できない問題が発生しました。',
+        category: 'システム障害',
+        status: '実施中',
+        createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: '3',
+        title: '顧客情報の入力ミス',
+        summary: '顧客の住所を間違って入力し、配送に遅延が生じました。',
+        category: '作業ミス',
+        status: '検討中',
+        createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+      },
+    ];
+  } finally {
+    loading.value = false;
+  }
+};
+
+// Lifecycle
+onMounted(() => {
+  fetchRecentReports();
+});
+
+// Meta
+useHead({
+  title: 'ホーム - 報告システム',
+});
 </script>
+
+<style scoped>
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+</style>
