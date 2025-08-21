@@ -16,14 +16,20 @@ export const useAuth = () => {
       globalError.value = null;
 
       console.log('Calling AWS Cognito signIn...');
-      const { isSignedIn } = await signIn({
+      const signInResult = await signIn({
         username: username,
         password: password,
       });
 
-      console.log('signIn result:', { isSignedIn });
+      console.log('signIn full result:', signInResult);
+      console.log('signIn result:', { isSignedIn: signInResult.isSignedIn });
 
-      if (isSignedIn) {
+      // 追加の詳細情報をログ出力
+      if (signInResult.nextStep) {
+        console.log('signIn nextStep:', signInResult.nextStep);
+      }
+
+      if (signInResult.isSignedIn) {
         console.log('Sign in successful, getting current user...');
         // ログイン成功時は即座に認証状態を更新
         try {
