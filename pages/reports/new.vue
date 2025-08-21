@@ -145,10 +145,8 @@
         </div>
 
         <template #actions>
-          <div class="flex justify-between">
-            <Button variant="secondary" @click="showConfirmDialog = false"> いいえ </Button>
-            <Button variant="primary" @click="confirmLeave"> はい </Button>
-          </div>
+          <Button variant="secondary" @click="onCancelLeave"> いいえ </Button>
+          <Button variant="primary" @click="onConfirmLeave"> はい </Button>
         </template>
       </Dialog>
     </div>
@@ -156,7 +154,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed } from 'vue';
 import { format } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import { COPY } from '~/constants/copy';
@@ -187,8 +185,7 @@ const generating = ref(false);
 const submitting = ref(false);
 const showSuccessDialog = ref(false);
 const showConfirmDialog = ref(false);
-const isNavigating = ref(false);
-let pendingNavigation: (() => void) | null = null;
+let pendingNext: import('vue-router').NavigationGuardNext | null = null;
 
 const report = ref<Report>({
   title: '',
@@ -229,25 +226,9 @@ const hasUserInput = computed(() => {
 });
 
 // Methods
-const getCategoryVariant = (
-  category: string,
-): 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'outline' => {
-  const variants: Record<
-    string,
-    'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'outline'
-  > = {
-    '情報漏洩・誤送信': 'error',
-    システム障害: 'warning',
-    作業ミス: 'primary',
-    コミュニケーション: 'secondary',
-    その他: 'default',
-  };
-  return variants[category] || 'default';
-};
-
 const getCategoryLabel = (value: string): string => {
   const option = categoryOptions.find((opt) => opt.value === value);
-  return option?.label || value;
+  return option?.label ?? value;
 };
 
 const formatDate = (dateString: string) => {
@@ -266,8 +247,8 @@ const clearContent = () => {
 };
 
 const handleBack = () => {
-  if (hasUserInput.value) {
-    pendingNavigation = () => router.back();
+  if (hasUserInput.value && !showSuccessDialog.value) {
+    pendingNext = () => router.back();
     showConfirmDialog.value = true;
   } else {
     router.back();
@@ -275,43 +256,26 @@ const handleBack = () => {
 };
 
 const handleCancel = () => {
-  if (hasUserInput.value) {
-    pendingNavigation = () => navigateTo('/reports');
+  if (hasUserInput.value && !showSuccessDialog.value) {
+    pendingNext = () => navigateTo('/reports');
     showConfirmDialog.value = true;
   } else {
     navigateTo('/reports');
   }
 };
 
-const confirmLeave = () => {
-  console.log('🔄 confirmLeave called');
-  console.log('📋 pendingNavigation:', pendingNavigation);
-
-  if (isNavigating.value) {
-    console.log('⚠️ Already navigating, ignoring');
-    return;
-  }
-
-  isNavigating.value = true;
+const onConfirmLeave = () => {
+  if (!pendingNext) return;
+  const n = pendingNext;
+  pendingNext = null;
   showConfirmDialog.value = false;
+  n(); // ナビゲーション実行
+};
 
-  if (pendingNavigation) {
-    console.log('✅ Executing pendingNavigation');
-    // イベントリスナーを一時的に無効化
-    window.removeEventListener('popstate', handlePopState);
-
-    pendingNavigation();
-    pendingNavigation = null;
-
-    // 少し遅延してからフラグをリセット
-    setTimeout(() => {
-      isNavigating.value = false;
-      window.addEventListener('popstate', handlePopState);
-    }, 100);
-  } else {
-    console.log('❌ No pendingNavigation found');
-    isNavigating.value = false;
-  }
+const onCancelLeave = () => {
+  pendingNext = null;
+  showConfirmDialog.value = false;
+  // ダイアログを閉じるだけで、ナビゲーションはキャンセル
 };
 
 const generateReport = async () => {
@@ -402,52 +366,10 @@ const goToReportsList = () => {
   navigateTo('/reports');
 };
 
-// Browser back button handling
-const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-  if (hasUserInput.value && !showSuccessDialog.value) {
-    event.preventDefault();
-    event.returnValue = '入力した内容が失われます。本当に画面を離れますか？';
-    return event.returnValue;
-  }
-};
-
-const handlePopState = (event: PopStateEvent) => {
-  console.log('🔙 Browser back button detected');
-
-  if (isNavigating.value) {
-    console.log('⚠️ Already navigating, ignoring popstate');
-    return;
-  }
-
-  if (hasUserInput.value && !showSuccessDialog.value && !showConfirmDialog.value) {
-    console.log('📝 Has user input, showing confirmation dialog');
-    event.preventDefault();
-    // ブラウザの履歴を元に戻す
-    window.history.pushState(null, '', window.location.href);
-    pendingNavigation = () => router.back();
-    showConfirmDialog.value = true;
-  }
-};
-
-// Event listeners setup
-onMounted(() => {
-  console.log('🔧 Setting up browser navigation listeners');
-  window.addEventListener('beforeunload', handleBeforeUnload);
-  window.addEventListener('popstate', handlePopState);
-  // 初期状態をhistoryに追加
-  window.history.pushState(null, '', window.location.href);
-});
-
-onUnmounted(() => {
-  console.log('🧹 Cleaning up browser navigation listeners');
-  window.removeEventListener('beforeunload', handleBeforeUnload);
-  window.removeEventListener('popstate', handlePopState);
-});
-
 // Navigation guard
 onBeforeRouteLeave((to, from, next) => {
   if (hasUserInput.value && !showSuccessDialog.value) {
-    pendingNavigation = () => next();
+    pendingNext = next;
     showConfirmDialog.value = true;
     next(false);
   } else {
