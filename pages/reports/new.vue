@@ -260,10 +260,11 @@ const handleCancel = () => {
 
 const onConfirmLeave = () => {
   if (!pendingNavigation) return;
-  const { next } = pendingNavigation;
   pendingNavigation = null;
   showConfirmDialog.value = false;
-  next(); // ナビゲーション実行
+
+  // 常にレポート一覧に戻る
+  navigateTo('/reports');
 };
 
 const onCancelLeave = () => {
