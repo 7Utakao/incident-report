@@ -10,50 +10,10 @@
         <p class="mt-2 text-gray">{{ COPY.newGuidance }}</p>
       </div>
 
-      <!-- Step Indicator -->
-      <div class="mb-8">
-        <div class="flex items-center justify-center space-x-4">
-          <div class="flex items-center">
-            <div
-              :class="[
-                'w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium',
-                currentStep >= 1 ? 'bg-primary-500 text-white' : 'bg-gray-200 text-gray-500',
-              ]"
-            >
-              1
-            </div>
-            <span class="ml-2 text-sm font-medium text-gray-700">本文入力</span>
-          </div>
-          <div class="w-16 h-0.5 bg-gray-200"></div>
-          <div class="flex items-center">
-            <div
-              :class="[
-                'w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium',
-                currentStep >= 2 ? 'bg-primary-500 text-white' : 'bg-gray-200 text-gray-500',
-              ]"
-            >
-              2
-            </div>
-            <span class="ml-2 text-sm font-medium text-gray-700">AI生成・編集</span>
-          </div>
-          <div class="w-16 h-0.5 bg-gray-200"></div>
-          <div class="flex items-center">
-            <div
-              :class="[
-                'w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium',
-                currentStep >= 3 ? 'bg-primary-500 text-white' : 'bg-gray-200 text-gray-500',
-              ]"
-            >
-              3
-            </div>
-            <span class="ml-2 text-sm font-medium text-gray-700">投稿</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Step 1: Initial Input -->
-      <Card v-if="currentStep === 1" title="インシデントの詳細を入力">
+      <!-- Single Page Form -->
+      <Card title="インシデント報告">
         <div class="space-y-6">
+          <!-- Original Content Input -->
           <div>
             <label class="block text-sm font-medium text-secondary mb-2">
               本文 <span class="text-error">*</span>
@@ -69,139 +29,87 @@
             </p>
           </div>
 
-          <div class="flex justify-between">
+          <!-- AI Generate Button -->
+          <div class="mt-2 flex justify-end">
+            <Button
+              variant="primary"
+              :disabled="!initialContent.trim() || generating"
+              :loading="generating"
+              @click="generateReport"
+              class="px-8 py-3"
+            >
+              <span v-if="generating">AI生成中...</span>
+              <span v-else>AI生成</span>
+            </Button>
+          </div>
+
+          <!-- Generated Form Fields -->
+          <div class="space-y-6">
+            <!-- Title -->
+            <div>
+              <Input
+                v-model="report.title"
+                label="タイトル"
+                placeholder="タイトルを入力"
+                required
+              />
+            </div>
+
+            <!-- Category -->
+            <div>
+              <Select
+                v-model="report.category"
+                label="カテゴリ"
+                :options="categoryOptions"
+                placeholder="カテゴリを選択"
+                required
+              />
+            </div>
+
+            <!-- Date -->
+            <div>
+              <Input v-model="report.occurredAt" label="発生日時" type="date" required />
+            </div>
+
+            <!-- Content -->
+            <div>
+              <label class="block text-sm font-medium text-secondary mb-2">
+                内容（AI整理済み）
+              </label>
+              <textarea
+                v-model="report.content"
+                rows="8"
+                class="w-full px-3 py-2 border border-gray-300 rounded-token-md focus-ring resize-none"
+                placeholder="AI生成後に内容が表示されます"
+              ></textarea>
+            </div>
+
+            <!-- Improvement Suggestions -->
+            <div>
+              <label class="block text-sm font-medium text-secondary mb-2">
+                改善案（AI提案）
+              </label>
+              <textarea
+                v-model="report.improvements"
+                rows="6"
+                class="w-full px-3 py-2 border border-gray-300 rounded-token-md focus-ring resize-none"
+                placeholder="AI生成後に改善案が表示されます"
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex justify-between pt-6">
             <Button variant="ghost" @click="$router.back()"> キャンセル </Button>
             <div class="flex space-x-3">
               <Button variant="secondary" @click="clearContent"> クリア </Button>
+              <Button variant="secondary" @click="saveDraft"> 下書き保存 </Button>
               <Button
                 variant="primary"
-                :disabled="!initialContent.trim()"
-                :loading="generating"
-                @click="generateReport"
+                :disabled="!isFormValid"
+                :loading="submitting"
+                @click="submitReport"
               >
-                AI生成
-              </Button>
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      <!-- Step 2: AI Generated Results -->
-      <Card v-if="currentStep === 2" title="AI生成結果 - 確認・編集">
-        <div class="space-y-6">
-          <!-- Original Content (preserved) -->
-          <div>
-            <label class="block text-sm font-medium text-secondary mb-2">
-              元の本文 <span class="text-xs text-gray-500">（再生成時に参照されます）</span>
-            </label>
-            <textarea
-              v-model="initialContent"
-              rows="4"
-              class="w-full px-3 py-2 border border-gray-300 rounded-token-md focus-ring resize-none bg-gray-50"
-              placeholder="元の本文がここに表示されます"
-            ></textarea>
-          </div>
-
-          <!-- Title -->
-          <div>
-            <Input v-model="report.title" label="タイトル" placeholder="タイトルを入力" required />
-          </div>
-
-          <!-- Category -->
-          <div>
-            <Select
-              v-model="report.category"
-              label="カテゴリ"
-              :options="categoryOptions"
-              placeholder="カテゴリを選択"
-              required
-            />
-          </div>
-
-          <!-- Date -->
-          <div>
-            <Input v-model="report.occurredAt" label="発生日時" type="date" required />
-          </div>
-
-          <!-- Content -->
-          <div>
-            <label class="block text-sm font-medium text-secondary mb-2">
-              内容（AI整理済み）
-            </label>
-            <textarea
-              v-model="report.content"
-              rows="8"
-              class="w-full px-3 py-2 border border-gray-300 rounded-token-md focus-ring resize-none"
-            ></textarea>
-          </div>
-
-          <!-- Improvement Suggestions -->
-          <div>
-            <label class="block text-sm font-medium text-secondary mb-2"> 改善案（AI提案） </label>
-            <textarea
-              v-model="report.improvements"
-              rows="6"
-              class="w-full px-3 py-2 border border-gray-300 rounded-token-md focus-ring resize-none"
-            ></textarea>
-          </div>
-
-          <div class="flex justify-between">
-            <Button variant="ghost" @click="goBackToStep1"> 戻る </Button>
-            <div class="flex space-x-3">
-              <Button variant="secondary" :loading="generating" @click="regenerateReport">
-                再生成
-              </Button>
-              <Button variant="ghost" @click="saveDraft"> 下書き保存 </Button>
-              <Button variant="primary" :disabled="!isFormValid" @click="proceedToSubmit">
-                投稿へ進む
-              </Button>
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      <!-- Step 3: Final Confirmation -->
-      <Card v-if="currentStep === 3" title="投稿確認">
-        <div class="space-y-6">
-          <!-- Preview -->
-          <div class="bg-gray-50 p-6 rounded-token-lg">
-            <h3 class="text-lg font-semibold text-secondary mb-4">投稿内容プレビュー</h3>
-
-            <div class="space-y-4">
-              <div>
-                <span class="text-sm font-medium text-gray-600">タイトル:</span>
-                <p class="text-secondary">{{ report.title }}</p>
-              </div>
-
-              <div>
-                <span class="text-sm font-medium text-gray-600">カテゴリ:</span>
-                <Badge :variant="getCategoryVariant(report.category)" class="ml-2">
-                  {{ getCategoryLabel(report.category) }}
-                </Badge>
-              </div>
-
-              <div>
-                <span class="text-sm font-medium text-gray-600">発生日時:</span>
-                <p class="text-secondary">{{ formatDate(report.occurredAt) }}</p>
-              </div>
-
-              <div>
-                <span class="text-sm font-medium text-gray-600">内容:</span>
-                <div class="mt-1 whitespace-pre-wrap text-secondary">{{ report.content }}</div>
-              </div>
-
-              <div>
-                <span class="text-sm font-medium text-gray-600">改善案:</span>
-                <div class="mt-1 whitespace-pre-wrap text-secondary">{{ report.improvements }}</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="flex justify-between">
-            <Button variant="ghost" @click="goBackToStep2"> 編集に戻る </Button>
-            <div class="flex space-x-3">
-              <Button variant="secondary" @click="saveDraft"> 下書き保存 </Button>
-              <Button variant="primary" :loading="submitting" @click="submitReport">
                 投稿する
               </Button>
             </div>
@@ -252,8 +160,9 @@ interface Report {
 }
 
 // Reactive data
-const currentStep = ref(1);
-const initialContent = ref('');
+const initialContent = ref(
+  'メール送信時の確認不足により、宛先を間違えて送信してしまいました。今後は送信前に宛先を二重チェックする仕組みを作りたいと思います。具体的には、送信ボタンを押す前に確認ダイアログを表示し、宛先リストを再度確認できるようにしたいと考えています。',
+);
 const generating = ref(false);
 const submitting = ref(false);
 const showSuccessDialog = ref(false);
@@ -304,7 +213,7 @@ const getCategoryVariant = (
 
 const getCategoryLabel = (value: string): string => {
   const option = categoryOptions.find((opt) => opt.value === value);
-  return option?.label ?? value;
+  return option?.label || value;
 };
 
 const formatDate = (dateString: string) => {
@@ -318,52 +227,49 @@ const clearContent = () => {
 const generateReport = async () => {
   if (!initialContent.value.trim()) return;
 
+  // 二重送信防止
+  if (generating.value) return;
+
   try {
     generating.value = true;
+    console.log('🚀 AI生成開始');
 
-    // Mock AI generation delay
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    const { ai } = useApi();
+    const result = await ai.generate(initialContent.value.trim());
 
-    // Mock AI generated content
+    console.log('✅ AI生成結果:', result);
+
+    // フォームへ反映
     report.value = {
-      title: '機密資料の誤送信インシデント',
-      category: '情報漏洩・誤送信',
+      title: String(result.title || 'AI生成タイトル'),
+      category: String(result.category || 'その他'),
       occurredAt: new Date().toISOString().split('T')[0],
-      content: `【発生事象】
-- 重要な会議資料を間違った取引先に送信
-- 資料には機密情報が含まれていた
-
-【原因】
-- 宛先確認の不備
-- 送信前のダブルチェック不足
-
-【対応】
-- 即座に先方へ連絡・削除依頼
-- 上司への報告完了`,
-      improvements: `1. 送信前の宛先確認チェックリストの作成
-2. 機密資料送信時の上司承認制度の導入
-3. メール送信遅延機能の活用
-4. 定期的な情報セキュリティ研修の実施`,
+      content: String(result.summary || initialContent.value),
+      improvements: Array.isArray(result.improvements)
+        ? result.improvements.join('\n')
+        : String(result.improvements || '改善案を検討してください'),
     };
 
-    currentStep.value = 2;
-  } finally {
-    generating.value = false;
-  }
-};
+    console.log('✅ Report mapped successfully:', report.value);
+    console.log('🎉 AI生成が正常に完了しました！');
+  } catch (error: any) {
+    // 失敗理由の見える化
+    console.error('ai/generate failed:', error);
 
-const regenerateReport = async () => {
-  try {
-    generating.value = true;
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    // Mock regenerated content with slight variations
-    report.value.title = '重要資料の誤送信による情報漏洩リスク';
-    report.value.improvements = `1. 送信前の宛先確認プロセスの強化
-2. 機密レベル別の承認フローの確立
-3. 自動送信遅延システムの導入
-4. 情報セキュリティ意識向上研修の定期実施
-5. インシデント対応マニュアルの整備`;
+    // 503 Service Unavailable の場合は特別な処理
+    if (error.statusCode === 503) {
+      const retrySeconds = error.retryAfter || 2;
+      alert(`サービスが一時的に過負荷状態です。\n${retrySeconds}秒後に再試行してください。`);
+    } else if (error.message?.includes('実行中です')) {
+      // 連続送信エラー
+      alert('AI生成処理が実行中です。しばらくお待ちください。');
+    } else if (error.message?.includes('お待ちください')) {
+      // 間隔制限エラー
+      alert(error.message);
+    } else {
+      // その他のエラー
+      alert(`AI生成に失敗しました: ${error.message ?? error}`);
+    }
   } finally {
     generating.value = false;
   }
@@ -374,7 +280,6 @@ const saveDraft = async () => {
     const draftData = {
       initialContent: initialContent.value,
       report: report.value,
-      currentStep: currentStep.value,
       timestamp: new Date().toISOString(),
     };
 
@@ -400,18 +305,6 @@ const saveDraft = async () => {
   }
 };
 
-const goBackToStep1 = () => {
-  currentStep.value = 1;
-};
-
-const proceedToSubmit = () => {
-  currentStep.value = 3;
-};
-
-const goBackToStep2 = () => {
-  currentStep.value = 2;
-};
-
 const submitReport = async () => {
   try {
     submitting.value = true;
@@ -427,7 +320,6 @@ const submitReport = async () => {
 
 const createAnother = () => {
   showSuccessDialog.value = false;
-  currentStep.value = 1;
   initialContent.value = '';
   report.value = {
     title: '',

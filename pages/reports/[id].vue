@@ -175,79 +175,23 @@ const fetchReport = async () => {
     loading.value = true;
     error.value = false;
 
-    // Mock API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const { reports: api } = useApi();
+    const response = await api.get(reportId);
 
-    // Mock data - simulate API response
-    const mockReports: Record<string, Report> = {
-      '1': {
-        id: '1',
-        title: '機密資料の誤送信報告',
-        summary: '重要な会議資料を間違った取引先に送信してしまいました。',
-        body: `【発生事象】
-2024年1月15日 14:30頃、重要な会議資料「2024年度事業計画書」を、本来送信すべきA社ではなく、競合他社のB社に誤って送信してしまいました。
-
-【原因分析】
-1. メールアドレスの自動補完機能により、類似した会社名で間違った宛先が選択された
-2. 送信前の宛先確認を怠った
-3. 機密資料であることの認識が不足していた
-
-【影響範囲】
-- 事業計画の一部が競合他社に漏洩
-- 顧客からの信頼失墜のリスク
-- 法的リスクの可能性
-
-【対応状況】
-1. 即座にB社に連絡し、資料の削除を依頼（完了）
-2. 上司および関係部署への報告（完了）
-3. A社への正しい資料送信（完了）
-4. 社内セキュリティチームへの報告（完了）`,
-        category: '情報漏洩・誤送信',
-        tags: ['メール誤送信', '機密情報', '宛先確認', 'セキュリティ'],
-        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-        author: '田中太郎',
-        userId: 'user-123',
-        pointsAwarded: 15,
-      },
-      '2': {
-        id: '2',
-        title: 'データベース接続エラー',
-        summary: '朝の業務開始時にデータベースに接続できない問題が発生しました。',
-        body: `【発生事象】
-2024年1月16日 9:00頃、業務システムにログインしようとしたところ、データベース接続エラーが発生し、システムが利用できない状態となりました。
-
-【原因分析】
-1. 前夜のメンテナンス作業でデータベースサーバーの設定が変更された
-2. 接続プールの設定に不備があった
-3. 監視システムが正常に動作していなかった
-
-【影響範囲】
-- 全社員の業務システム利用不可（約2時間）
-- 顧客対応の遅延
-- 売上データの更新遅延
-
-【対応状況】
-1. システム管理者への緊急連絡（完了）
-2. データベース設定の修正（完了）
-3. システム復旧確認（完了）
-4. 影響を受けた業務の洗い出し（進行中）`,
-        category: 'システム障害',
-        tags: ['データベース', '接続エラー', 'メンテナンス', '監視'],
-        createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
-        author: '佐藤花子',
-        userId: 'user-456',
-        pointsAwarded: 12,
-      },
+    // APIレスポンスをUIで使用する形式に変換
+    report.value = {
+      id: response.reportId,
+      title: response.title || '無題',
+      summary: response.summary || response.body?.substring(0, 100) + '...' || '',
+      body: response.body,
+      category: response.category,
+      tags: response.tags || [],
+      createdAt: response.createdAt,
+      updatedAt: response.createdAt, // 現在のAPIには updatedAt がないため createdAt を使用
+      author: 'ユーザー', // 現在のAPIには author がないため固定値
+      userId: response.userId,
+      pointsAwarded: 0, // 現在のAPIには pointsAwarded がないため固定値
     };
-
-    const foundReport = mockReports[reportId];
-    if (foundReport) {
-      report.value = foundReport;
-    } else {
-      error.value = true;
-    }
   } catch (err) {
     console.error('Failed to fetch report:', err);
     error.value = true;

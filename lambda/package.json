@@ -1,22 +1,26 @@
 {
-  "name": "incident-report-api-lambda",
+  "name": "ir-report-api",
   "version": "1.0.0",
-  "description": "Incident Report API Lambda Function",
+  "description": "Lambda function for incident report API",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "esbuild index.ts --bundle --platform=node --target=node20 --outfile=index.js --format=cjs --external:@aws-sdk/*",
+    "zip": "npm run build && zip -r function.zip index.js"
   },
   "dependencies": {
-    "uuid": "^9.0.0"
+    "@aws-sdk/client-dynamodb": "^3.490.0",
+    "@aws-sdk/lib-dynamodb": "^3.490.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.490.0",
+    "openai": "^4.28.0",
+    "zod": "^3.22.4",
+    "uuid": "^9.0.1",
+    "ajv": "^8.12.0"
   },
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "keywords": [
-    "lambda",
-    "incident-report",
-    "api"
-  ],
-  "author": "",
-  "license": "ISC"
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.131",
+    "@types/node": "^20.10.6",
+    "@types/uuid": "^9.0.7",
+    "esbuild": "^0.19.11",
+    "typescript": "^5.3.3"
+  }
 }

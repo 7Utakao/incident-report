@@ -307,67 +307,31 @@ const exportReports = () => {
 const fetchReports = async () => {
   try {
     loading.value = true;
-    // Mock API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const { reports: api } = useApi();
 
-    // Mock data
-    reports.value = [
-      {
-        id: '1',
-        title: '機密資料の誤送信インシデント',
-        summary: '重要な会議資料を間違った取引先に送信してしまいました。',
-        category: '情報漏洩・誤送信',
-        status: '完了',
-        author: '田中太郎',
-        userId: 'user-123', // Current user - can edit
-        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: '2',
-        title: 'データベース接続エラー',
-        summary: '朝の業務開始時にデータベースに接続できない問題が発生しました。',
-        category: 'システム障害',
-        status: '実施中',
-        author: '佐藤花子',
-        userId: 'user-456', // Different user - cannot edit
-        createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: '3',
-        title: '顧客情報の入力ミス',
-        summary: '顧客の住所を間違って入力し、配送に遅延が生じました。',
-        category: '作業ミス',
-        status: '検討中',
-        author: '鈴木一郎',
-        userId: 'user-789', // Different user - cannot edit
-        createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: '4',
-        title: 'メール送信の遅延',
-        summary: '重要な通知メールの送信が大幅に遅延しました。',
-        category: 'システム障害',
-        status: '完了',
-        author: '高橋次郎',
-        userId: 'user-123', // Current user - can edit
-        createdAt: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: '5',
-        title: '会議室の予約ミス',
-        summary: '重要な会議の会議室予約を間違えてしまいました。',
-        category: 'コミュニケーション',
-        status: '下書き',
-        author: '山田三郎',
-        userId: 'user-999', // Different user - cannot edit
-        createdAt: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
-      },
-    ];
+    const response = await api.list({
+      q: filters.value.q,
+      category: filters.value.category,
+      from: filters.value.from,
+      to: filters.value.to,
+    });
+
+    // APIレスポンスをUIで使用する形式に変換
+    reports.value = response.items.map((item: any) => ({
+      id: item.reportId,
+      title: item.title || '無題',
+      summary: item.summary || item.body?.substring(0, 100) + '...' || '',
+      category: item.category,
+      status: '完了', // 現在のAPIには status がないため固定値
+      author: 'ユーザー', // 現在のAPIには author がないため固定値
+      userId: item.userId,
+      createdAt: item.createdAt,
+      updatedAt: item.createdAt, // 現在のAPIには updatedAt がないため createdAt を使用
+    }));
+  } catch (error) {
+    console.error('Failed to fetch reports:', error);
+    // エラー時は空配列を設定
+    reports.value = [];
   } finally {
     loading.value = false;
   }

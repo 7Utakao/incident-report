@@ -1,0 +1,9 @@
+{
+  "routeKey": "GET /health",
+  "requestContext": {
+    "http": {
+      "method": "GET",
+      "path": "/health"
+    }
+  }
+}

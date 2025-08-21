@@ -1,0 +1,13 @@
+{
+  "requestContext": {
+    "http": {
+      "method": "POST",
+      "path": "/reports"
+    }
+  },
+  "headers": {
+    "authorization": "Bearer test-token",
+    "content-type": "application/json"
+  },
+  "body": "{\"body\":\"Test report content\",\"category\":\"test\",\"title\":\"Test Report\"}"
+}
