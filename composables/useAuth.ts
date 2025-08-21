@@ -9,32 +9,44 @@ const globalError = ref<string | null>(null);
 export const useAuth = () => {
   // ログイン
   const login = async (username: string, password: string) => {
+    console.log('useAuth.login called with:', { username, passwordLength: password.length });
     try {
+      console.log('Setting loading to true');
       globalLoading.value = true;
       globalError.value = null;
 
+      console.log('Calling AWS Cognito signIn...');
       const { isSignedIn } = await signIn({
         username: username,
         password: password,
       });
 
+      console.log('signIn result:', { isSignedIn });
+
       if (isSignedIn) {
+        console.log('Sign in successful, getting current user...');
         // ログイン成功時は即座に認証状態を更新
         try {
           const currentUser = await getCurrentUser();
+          console.log('getCurrentUser result:', currentUser);
           if (currentUser) {
             globalUser.value = currentUser;
             globalIsAuthenticated.value = true;
-            console.log('ログイン成功:', currentUser);
+            console.log('認証状態を更新しました:', {
+              user: currentUser,
+              isAuthenticated: globalIsAuthenticated.value,
+            });
             return true;
           }
         } catch (userError) {
           console.error('ユーザー情報取得エラー:', userError);
           // ユーザー情報取得に失敗してもログインは成功とみなす
+          console.log('ユーザー情報取得失敗でも認証成功とみなします');
           globalIsAuthenticated.value = true;
           return true;
         }
       }
+      console.log('Sign in failed or isSignedIn is false');
       return false;
     } catch (err: any) {
       console.error('ログインエラー:', err);
@@ -47,6 +59,7 @@ export const useAuth = () => {
       }
       return false;
     } finally {
+      console.log('Setting loading to false');
       globalLoading.value = false;
     }
   };

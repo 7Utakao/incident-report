@@ -112,12 +112,24 @@ const { login, loading, error, isAuthenticated } = useAuth();
 
 // ログイン処理
 const handleLogin = async () => {
-  const success = await login(username.value, password.value);
+  console.log('handleLogin called - 関数が実行されました');
+  console.log('Username:', username.value, 'Password length:', password.value.length);
+  console.log('Login function:', typeof login);
 
-  if (success) {
-    // 認証状態の更新を待ってからナビゲート
-    await nextTick();
-    console.log('ログイン成功、ナビゲート開始');
+  try {
+    console.log('login関数を呼び出し中...');
+    const success = await login(username.value, password.value);
+    console.log('login関数の結果:', success);
+
+    if (success) {
+      // 認証状態の更新を待ってからナビゲート
+      await nextTick();
+      console.log('ログイン成功、ナビゲート開始');
+    } else {
+      console.log('ログイン失敗');
+    }
+  } catch (err) {
+    console.error('handleLogin内でエラー:', err);
   }
 };
 
