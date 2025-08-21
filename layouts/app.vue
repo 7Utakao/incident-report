@@ -186,27 +186,10 @@ const handleSignOut = async () => {
   }
 };
 
-// 認証状態をチェック
+// 初期化時に認証状態をチェック
 onMounted(async () => {
   if (process.client) {
-    try {
-      const isAuth = await checkAuthStatus();
-      if (!isAuth && !route.path.includes('/login')) {
-        await navigateTo('/login');
-      }
-    } catch (error) {
-      console.error('認証チェックエラー:', error);
-      if (!route.path.includes('/login')) {
-        await navigateTo('/login');
-      }
-    }
-  }
-});
-
-// 認証状態の変化を監視
-watch(isAuthenticated, (newValue) => {
-  if (!newValue && !route.path.includes('/login')) {
-    navigateTo('/login');
+    await checkAuthStatus();
   }
 });
 </script>

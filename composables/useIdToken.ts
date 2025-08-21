@@ -44,11 +44,6 @@ export const useIdToken = () => {
     return await getIdToken();
   };
 
-  // 初期化時にトークンを取得
-  onMounted(async () => {
-    await getIdToken();
-  });
-
   return {
     idToken: readonly(idToken),
     isAuthenticated: readonly(isAuthenticated),
