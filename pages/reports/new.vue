@@ -156,7 +156,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { format } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import { COPY } from '~/constants/copy';
@@ -283,10 +283,15 @@ const handleCancel = () => {
 };
 
 const confirmLeave = () => {
+  console.log('🔄 confirmLeave called');
+  console.log('📋 pendingNavigation:', pendingNavigation);
   showConfirmDialog.value = false;
   if (pendingNavigation) {
+    console.log('✅ Executing pendingNavigation');
     pendingNavigation();
     pendingNavigation = null;
+  } else {
+    console.log('❌ No pendingNavigation found');
   }
 };
 
@@ -377,6 +382,42 @@ const goToReportsList = () => {
   showSuccessDialog.value = false;
   navigateTo('/reports');
 };
+
+// Browser back button handling
+const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+  if (hasUserInput.value && !showSuccessDialog.value) {
+    event.preventDefault();
+    event.returnValue = '入力した内容が失われます。本当に画面を離れますか？';
+    return event.returnValue;
+  }
+};
+
+const handlePopState = (event: PopStateEvent) => {
+  console.log('🔙 Browser back button detected');
+  if (hasUserInput.value && !showSuccessDialog.value) {
+    console.log('📝 Has user input, showing confirmation dialog');
+    event.preventDefault();
+    // ブラウザの履歴を元に戻す
+    window.history.pushState(null, '', window.location.href);
+    pendingNavigation = () => window.history.back();
+    showConfirmDialog.value = true;
+  }
+};
+
+// Event listeners setup
+onMounted(() => {
+  console.log('🔧 Setting up browser navigation listeners');
+  window.addEventListener('beforeunload', handleBeforeUnload);
+  window.addEventListener('popstate', handlePopState);
+  // 初期状態をhistoryに追加
+  window.history.pushState(null, '', window.location.href);
+});
+
+onUnmounted(() => {
+  console.log('🧹 Cleaning up browser navigation listeners');
+  window.removeEventListener('beforeunload', handleBeforeUnload);
+  window.removeEventListener('popstate', handlePopState);
+});
 
 // Navigation guard
 onBeforeRouteLeave((to, from, next) => {
