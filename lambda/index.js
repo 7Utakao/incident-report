@@ -14111,11 +14111,22 @@ __export(lambda_exports, {
 module.exports = __toCommonJS(lambda_exports);
 
 // utils/response.ts
-function createResponse(statusCode, body) {
+var CORS_HEADERS = {
+  "Content-Type": "application/json",
+  "Access-Control-Allow-Origin": "*",
+  // 本番環境では具体的なドメインを指定
+  "Access-Control-Allow-Credentials": "true",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+  "Access-Control-Max-Age": "86400"
+  // 24 hours
+};
+function createResponse(statusCode, body, additionalHeaders = {}) {
   return {
     statusCode,
     headers: {
-      "Content-Type": "application/json"
+      ...CORS_HEADERS,
+      ...additionalHeaders
     },
     body: JSON.stringify(body)
   };
@@ -14123,6 +14134,13 @@ function createResponse(statusCode, body) {
 function createErrorResponse(statusCode, code, message) {
   console.error(`Error ${statusCode}: ${code} - ${message}`);
   return createResponse(statusCode, { code, message });
+}
+function createOptionsResponse() {
+  return {
+    statusCode: 200,
+    headers: CORS_HEADERS,
+    body: ""
+  };
 }
 
 // handlers/health.ts
@@ -18639,19 +18657,22 @@ var ConcurrencyLimiter = class {
       running: this.running,
       queued: this.queue.length,
       maxConcurrent: this.maxConcurrent,
-      isOverloaded: this.queue.length >= this.queueMaxSize * 0.8
-      // 80% threshold
+      isOverloaded: this.queue.length >= this.queueMaxSize * 0.9
+      // 90% threshold
     };
   }
   // Check if service is overloaded
   isOverloaded() {
-    return this.queue.length >= this.queueMaxSize * 0.8;
+    return this.queue.length >= this.queueMaxSize * 0.9;
   }
 };
 var aiConcurrencyLimiter = new ConcurrencyLimiter({
-  maxConcurrent: parseInt(process.env.AI_MAX_CONCURRENT || "3"),
-  queueTimeout: parseInt(process.env.AI_QUEUE_TIMEOUT || "30000"),
-  queueMaxSize: parseInt(process.env.AI_QUEUE_MAX_SIZE || "100")
+  maxConcurrent: parseInt(process.env.AI_MAX_CONCURRENT || "5"),
+  // 3から5に増加
+  queueTimeout: parseInt(process.env.AI_QUEUE_TIMEOUT || "45000"),
+  // 30秒から45秒に増加
+  queueMaxSize: parseInt(process.env.AI_QUEUE_MAX_SIZE || "150")
+  // 100から150に増加
 });
 async function withConcurrencyControl(operation, limiter = aiConcurrencyLimiter) {
   if (limiter.isOverloaded()) {
@@ -19143,6 +19164,9 @@ var handler = async (event, context) => {
       const path = event.requestContext.http.path;
       const routeKey = event.routeKey || `${method} ${path}`;
       console.log(`Processing route: ${routeKey}, method: ${method}, path: ${path}`);
+      if (method === "OPTIONS") {
+        return createOptionsResponse();
+      }
       if (routeKey === "$default" || routeKey === `${method} ${path}`) {
         if (method === "GET" && path === "/health") {
           return await handleHealth();

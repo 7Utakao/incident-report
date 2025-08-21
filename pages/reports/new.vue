@@ -118,7 +118,7 @@
       </Card>
 
       <!-- Success Dialog -->
-      <Dialog :open="showSuccessDialog" title="投稿完了" @close="showSuccessDialog = false">
+      <Dialog :open="showSuccessDialog" title="投稿完了" @close="handleDialogClose">
         <div class="text-center py-4">
           <div class="text-6xl mb-4">✅</div>
           <p class="text-lg font-medium text-secondary mb-2">報告が正常に投稿されました</p>
@@ -309,10 +309,19 @@ const submitReport = async () => {
   try {
     submitting.value = true;
 
-    // Mock API submission
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    // 実際のAPI呼び出し
+    const { reports } = useApi();
+    await reports.create({
+      title: report.value.title,
+      body: report.value.content,
+      category: report.value.category,
+      createdAt: report.value.occurredAt,
+    });
 
     showSuccessDialog.value = true;
+  } catch (error: any) {
+    console.error('Report submission failed:', error);
+    alert(`投稿に失敗しました: ${error.message || error}`);
   } finally {
     submitting.value = false;
   }
@@ -330,9 +339,22 @@ const createAnother = () => {
   };
 };
 
-const goToReportsList = async () => {
+const handleDialogClose = () => {
   showSuccessDialog.value = false;
-  await navigateTo('/reports');
+  // モーダルを閉じた時にフォームを初期化
+  initialContent.value = '';
+  report.value = {
+    title: '',
+    category: '',
+    occurredAt: new Date().toISOString().split('T')[0],
+    content: '',
+    improvements: '',
+  };
+};
+
+const goToReportsList = () => {
+  showSuccessDialog.value = false;
+  navigateTo('/reports');
 };
 
 // Meta

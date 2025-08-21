@@ -351,6 +351,13 @@ onMounted(() => {
   fetchReports();
 });
 
+// ページがフォーカスされた時にデータを再取得
+if (process.client) {
+  window.addEventListener('focus', () => {
+    fetchReports();
+  });
+}
+
 // Meta
 useHead({
   title: '報告一覧 - 報告システム',

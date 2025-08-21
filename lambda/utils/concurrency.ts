@@ -101,21 +101,21 @@ export class ConcurrencyLimiter {
       running: this.running,
       queued: this.queue.length,
       maxConcurrent: this.maxConcurrent,
-      isOverloaded: this.queue.length >= this.queueMaxSize * 0.8, // 80% threshold
+      isOverloaded: this.queue.length >= this.queueMaxSize * 0.9, // 90% threshold
     };
   }
 
   // Check if service is overloaded
   isOverloaded(): boolean {
-    return this.queue.length >= this.queueMaxSize * 0.8;
+    return this.queue.length >= this.queueMaxSize * 0.9;
   }
 }
 
 // Global instance for AI operations
 export const aiConcurrencyLimiter = new ConcurrencyLimiter({
-  maxConcurrent: parseInt(process.env.AI_MAX_CONCURRENT || '3'),
-  queueTimeout: parseInt(process.env.AI_QUEUE_TIMEOUT || '30000'),
-  queueMaxSize: parseInt(process.env.AI_QUEUE_MAX_SIZE || '100'),
+  maxConcurrent: parseInt(process.env.AI_MAX_CONCURRENT || '5'), // 3から5に増加
+  queueTimeout: parseInt(process.env.AI_QUEUE_TIMEOUT || '45000'), // 30秒から45秒に増加
+  queueMaxSize: parseInt(process.env.AI_QUEUE_MAX_SIZE || '150'), // 100から150に増加
 });
 
 // Helper function to execute with concurrency control

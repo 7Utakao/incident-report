@@ -1,5 +1,5 @@
 import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2, Context } from 'aws-lambda';
-import { createErrorResponse } from './utils/response';
+import { createErrorResponse, createOptionsResponse } from './utils/response';
 import { handleHealth } from './handlers/health';
 import { handleAiGenerate } from './handlers/ai-generate';
 import { handleValidateReport } from './handlers/validate';
@@ -21,6 +21,11 @@ export const handler = async (
       const routeKey = event.routeKey || `${method} ${path}`;
 
       console.log(`Processing route: ${routeKey}, method: ${method}, path: ${path}`);
+
+      // Handle OPTIONS requests for CORS preflight
+      if (method === 'OPTIONS') {
+        return createOptionsResponse();
+      }
 
       // For Lambda Function URL, routeKey is always "$default", so we need to route based on method and path
       if (routeKey === '$default' || routeKey === `${method} ${path}`) {
