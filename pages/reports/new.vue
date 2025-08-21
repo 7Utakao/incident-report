@@ -124,7 +124,7 @@
           <p class="text-gray">改善提案として記録され、チーム全体で共有されます。</p>
         </div>
 
-        <template #footer>
+        <template #actions>
           <div class="flex justify-center space-x-3">
             <Button variant="secondary" @click="createAnother"> 新しい報告を作成 </Button>
             <Button variant="primary" @click="goToReportsList"> 報告一覧へ </Button>
@@ -144,7 +144,7 @@
           </p>
         </div>
 
-        <template #footer>
+        <template #actions>
           <div class="flex justify-end space-x-3">
             <Button variant="secondary" @click="showConfirmDialog = false"> いいえ </Button>
             <Button variant="primary" @click="confirmLeave"> はい </Button>
