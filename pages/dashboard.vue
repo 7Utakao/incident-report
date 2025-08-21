@@ -82,4 +82,10 @@ const topTags = ref([
 useHead({
   title: 'ダッシュボード - 報告システム',
 });
+
+// 認証ガード
+definePageMeta({
+  middleware: 'auth',
+  layout: 'app',
+});
 </script>

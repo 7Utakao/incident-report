@@ -380,5 +380,6 @@ useHead({
 // 認証ガード
 definePageMeta({
   middleware: 'auth',
+  layout: 'app',
 });
 </script>

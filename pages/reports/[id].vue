@@ -211,4 +211,10 @@ useHead({
     report.value ? `${report.value.title} - 報告詳細` : '報告詳細 - 報告システム',
   ),
 });
+
+// 認証ガード
+definePageMeta({
+  middleware: 'auth',
+  layout: 'app',
+});
 </script>

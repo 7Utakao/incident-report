@@ -1,87 +1,73 @@
 <template>
   <div class="min-h-screen bg-gradient-to-b from-primary/40 via-white to-white">
-    <!-- サイドナビゲーション -->
-    <aside
+    <!-- レスポンシブヘッダー -->
+    <header
       v-if="isAuthenticated"
-      class="fixed inset-y-0 left-0 z-50 w-64 bg-primaryDeep text-white shadow-elev transform -translate-x-full lg:translate-x-0 transition-transform duration-200 ease-in-out"
-      :class="{ 'translate-x-0': sidebarOpen }"
+      class="bg-sky-100 shadow-sm border-b border-primary/20 sticky top-0 z-50"
     >
-      <div class="flex items-center justify-between h-16 px-6 border-b border-white/20">
-        <h1 class="text-xl font-bold text-white">報告システム</h1>
-        <button @click="sidebarOpen = false" class="lg:hidden text-white/70 hover:text-white">
-          <XMarkIcon class="h-6 w-6" />
-        </button>
-      </div>
-
-      <nav class="mt-6 px-3">
-        <div class="space-y-1">
-          <NuxtLink
-            to="/"
-            class="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors"
-            :class="
-              $route.path === '/'
-                ? 'bg-white/10 text-white'
-                : 'text-white/70 hover:bg-white/10 hover:text-white'
-            "
-          >
-            <HomeIcon class="mr-3 h-5 w-5 opacity-90" />
-            ホーム
-          </NuxtLink>
-
-          <NuxtLink
-            to="/reports"
-            class="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors"
-            :class="
-              $route.path.startsWith('/reports')
-                ? 'bg-white/10 text-white'
-                : 'text-white/70 hover:bg-white/10 hover:text-white'
-            "
-          >
-            <DocumentTextIcon class="mr-3 h-5 w-5 opacity-90" />
-            報告一覧
-          </NuxtLink>
-
-          <NuxtLink
-            to="/reports/new"
-            class="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors"
-            :class="
-              $route.path === '/reports/new'
-                ? 'bg-white/10 text-white'
-                : 'text-white/70 hover:bg-white/10 hover:text-white'
-            "
-          >
-            <PlusIcon class="mr-3 h-5 w-5 opacity-90" />
-            新規作成
-          </NuxtLink>
-
-          <NuxtLink
-            to="/dashboard"
-            class="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors"
-            :class="
-              $route.path === '/dashboard'
-                ? 'bg-white/10 text-white'
-                : 'text-white/70 hover:bg-white/10 hover:text-white'
-            "
-          >
-            <ChartBarIcon class="mr-3 h-5 w-5 opacity-90" />
-            ダッシュボード
-          </NuxtLink>
-        </div>
-      </nav>
-    </aside>
-
-    <!-- メインコンテンツ -->
-    <div :class="isAuthenticated ? 'lg:pl-64' : ''">
-      <!-- トップバー -->
-      <header v-if="isAuthenticated" class="bg-surface shadow-sm border-b border-primary/20">
-        <div class="flex items-center justify-between h-16 px-4 sm:px-6">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          <!-- ロゴ・タイトル -->
           <div class="flex items-center">
-            <button @click="sidebarOpen = true" class="lg:hidden text-ink/60 hover:text-ink">
-              <Bars3Icon class="h-6 w-6" />
-            </button>
+            <h1 class="text-xl font-bold text-primaryDeep">報告システム</h1>
+          </div>
 
-            <!-- 検索バー -->
-            <div class="ml-4 flex-1 max-w-md">
+          <!-- デスクトップナビゲーション (lg以上) -->
+          <nav class="hidden lg:flex lg:items-center lg:space-x-8">
+            <NuxtLink
+              to="/"
+              class="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors"
+              :class="
+                $route.path === '/'
+                  ? 'bg-primaryDeep/10 text-primaryDeep'
+                  : 'text-ink/70 hover:bg-primaryDeep/10 hover:text-primaryDeep'
+              "
+            >
+              <HomeIcon class="mr-2 h-4 w-4" />
+              ホーム
+            </NuxtLink>
+
+            <NuxtLink
+              to="/reports"
+              class="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors"
+              :class="
+                $route.path.startsWith('/reports')
+                  ? 'bg-primaryDeep/10 text-primaryDeep'
+                  : 'text-ink/70 hover:bg-primaryDeep/10 hover:text-primaryDeep'
+              "
+            >
+              <DocumentTextIcon class="mr-2 h-4 w-4" />
+              報告一覧
+            </NuxtLink>
+
+            <NuxtLink
+              to="/reports/new"
+              class="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors"
+              :class="
+                $route.path === '/reports/new'
+                  ? 'bg-primaryDeep/10 text-primaryDeep'
+                  : 'text-ink/70 hover:bg-primaryDeep/10 hover:text-primaryDeep'
+              "
+            >
+              <PlusIcon class="mr-2 h-4 w-4" />
+              新規作成
+            </NuxtLink>
+
+            <NuxtLink
+              to="/dashboard"
+              class="flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors"
+              :class="
+                $route.path === '/dashboard'
+                  ? 'bg-primaryDeep/10 text-primaryDeep'
+                  : 'text-ink/70 hover:bg-primaryDeep/10 hover:text-primaryDeep'
+              "
+            >
+              <ChartBarIcon class="mr-2 h-4 w-4" />
+              ダッシュボード
+            </NuxtLink>
+
+            <!-- 検索バー (デスクトップ) -->
+            <div class="ml-6">
               <div class="relative">
                 <MagnifyingGlassIcon
                   class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-ink/40"
@@ -89,15 +75,16 @@
                 <input
                   type="text"
                   placeholder="検索..."
-                  class="w-full pl-10 pr-4 py-2 border border-primary/25 rounded-md bg-surface text-ink placeholder-ink/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                  class="w-64 pl-10 pr-4 py-2 border border-primary/25 rounded-md bg-white text-ink placeholder-ink/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
                 />
               </div>
             </div>
-          </div>
+          </nav>
 
+          <!-- 右側のユーザーメニューとハンバーガーボタン -->
           <div class="flex items-center space-x-4">
-            <!-- ユーザー情報表示 -->
-            <div v-if="user" class="text-sm text-ink/70">
+            <!-- ユーザー情報表示 (デスクトップのみ) -->
+            <div v-if="user" class="hidden sm:block text-sm text-ink/70">
               {{ user.username }}
             </div>
 
@@ -141,22 +128,99 @@
                 </transition>
               </Menu>
             </div>
+
+            <!-- ハンバーガーメニューボタン (タブレット・モバイル) -->
+            <button
+              @click="mobileMenuOpen = !mobileMenuOpen"
+              class="lg:hidden text-ink/60 hover:text-ink"
+            >
+              <Bars3Icon v-if="!mobileMenuOpen" class="h-6 w-6" />
+              <XMarkIcon v-else class="h-6 w-6" />
+            </button>
           </div>
         </div>
-      </header>
 
-      <!-- ページコンテンツ -->
-      <main :class="isAuthenticated ? 'p-6' : ''">
-        <slot />
-      </main>
-    </div>
+        <!-- モバイル・タブレットナビゲーション -->
+        <div v-if="mobileMenuOpen" class="lg:hidden border-t border-primary/20 bg-sky-50">
+          <div class="px-2 pt-2 pb-3 space-y-1">
+            <NuxtLink
+              to="/"
+              @click="mobileMenuOpen = false"
+              class="flex items-center px-3 py-2 text-base font-medium rounded-md transition-colors"
+              :class="
+                $route.path === '/'
+                  ? 'bg-primaryDeep/10 text-primaryDeep'
+                  : 'text-ink/70 hover:bg-primaryDeep/10 hover:text-primaryDeep'
+              "
+            >
+              <HomeIcon class="mr-3 h-5 w-5" />
+              ホーム
+            </NuxtLink>
 
-    <!-- サイドバーオーバーレイ (モバイル) -->
-    <div
-      v-if="sidebarOpen"
-      @click="sidebarOpen = false"
-      class="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
-    ></div>
+            <NuxtLink
+              to="/reports"
+              @click="mobileMenuOpen = false"
+              class="flex items-center px-3 py-2 text-base font-medium rounded-md transition-colors"
+              :class="
+                $route.path.startsWith('/reports')
+                  ? 'bg-primaryDeep/10 text-primaryDeep'
+                  : 'text-ink/70 hover:bg-primaryDeep/10 hover:text-primaryDeep'
+              "
+            >
+              <DocumentTextIcon class="mr-3 h-5 w-5" />
+              報告一覧
+            </NuxtLink>
+
+            <NuxtLink
+              to="/reports/new"
+              @click="mobileMenuOpen = false"
+              class="flex items-center px-3 py-2 text-base font-medium rounded-md transition-colors"
+              :class="
+                $route.path === '/reports/new'
+                  ? 'bg-primaryDeep/10 text-primaryDeep'
+                  : 'text-ink/70 hover:bg-primaryDeep/10 hover:text-primaryDeep'
+              "
+            >
+              <PlusIcon class="mr-3 h-5 w-5" />
+              新規作成
+            </NuxtLink>
+
+            <NuxtLink
+              to="/dashboard"
+              @click="mobileMenuOpen = false"
+              class="flex items-center px-3 py-2 text-base font-medium rounded-md transition-colors"
+              :class="
+                $route.path === '/dashboard'
+                  ? 'bg-primaryDeep/10 text-primaryDeep'
+                  : 'text-ink/70 hover:bg-primaryDeep/10 hover:text-primaryDeep'
+              "
+            >
+              <ChartBarIcon class="mr-3 h-5 w-5" />
+              ダッシュボード
+            </NuxtLink>
+
+            <!-- 検索バー (モバイル・タブレット) -->
+            <div class="px-3 py-2">
+              <div class="relative">
+                <MagnifyingGlassIcon
+                  class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-ink/40"
+                />
+                <input
+                  type="text"
+                  placeholder="検索..."
+                  class="w-full pl-10 pr-4 py-2 border border-primary/25 rounded-md bg-white text-ink placeholder-ink/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main :class="isAuthenticated ? 'p-6' : ''">
+      <slot />
+    </main>
   </div>
 </template>
 
@@ -177,6 +241,7 @@ import {
 const { user, logout, isAuthenticated, checkAuthStatus } = useAuth();
 const route = useRoute();
 const sidebarOpen = ref(false);
+const mobileMenuOpen = ref(false);
 
 console.log('layouts/app.vue - 初期認証状態:', isAuthenticated.value);
 console.log('layouts/app.vue - 初期ユーザー:', user.value);
