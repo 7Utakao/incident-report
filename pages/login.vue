@@ -115,17 +115,23 @@ const handleLogin = async () => {
   const success = await login(username.value, password.value);
 
   if (success) {
-    // ログイン成功時はホーム画面にリダイレクト
-    await navigateTo('/');
+    // 認証状態の更新を待ってからナビゲート
+    await nextTick();
+    console.log('ログイン成功、ナビゲート開始');
   }
 };
 
-// 既にログイン済みの場合はリダイレクト
-watchEffect(() => {
-  if (isAuthenticated.value) {
-    navigateTo('/');
-  }
-});
+// 認証状態の変化を監視してナビゲート
+watch(
+  isAuthenticated,
+  async (newValue) => {
+    if (newValue) {
+      console.log('認証状態が更新されました、ナビゲート実行');
+      await navigateTo('/');
+    }
+  },
+  { immediate: true },
+);
 
 // Meta
 useHead({
