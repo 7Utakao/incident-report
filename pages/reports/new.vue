@@ -145,7 +145,7 @@
         </div>
 
         <template #actions>
-          <div class="flex justify-end space-x-3">
+          <div class="flex justify-between">
             <Button variant="secondary" @click="showConfirmDialog = false"> いいえ </Button>
             <Button variant="primary" @click="confirmLeave"> はい </Button>
           </div>
@@ -187,6 +187,7 @@ const generating = ref(false);
 const submitting = ref(false);
 const showSuccessDialog = ref(false);
 const showConfirmDialog = ref(false);
+const isNavigating = ref(false);
 let pendingNavigation: (() => void) | null = null;
 
 const report = ref<Report>({
@@ -285,13 +286,31 @@ const handleCancel = () => {
 const confirmLeave = () => {
   console.log('🔄 confirmLeave called');
   console.log('📋 pendingNavigation:', pendingNavigation);
+
+  if (isNavigating.value) {
+    console.log('⚠️ Already navigating, ignoring');
+    return;
+  }
+
+  isNavigating.value = true;
   showConfirmDialog.value = false;
+
   if (pendingNavigation) {
     console.log('✅ Executing pendingNavigation');
+    // イベントリスナーを一時的に無効化
+    window.removeEventListener('popstate', handlePopState);
+
     pendingNavigation();
     pendingNavigation = null;
+
+    // 少し遅延してからフラグをリセット
+    setTimeout(() => {
+      isNavigating.value = false;
+      window.addEventListener('popstate', handlePopState);
+    }, 100);
   } else {
     console.log('❌ No pendingNavigation found');
+    isNavigating.value = false;
   }
 };
 
@@ -394,12 +413,18 @@ const handleBeforeUnload = (event: BeforeUnloadEvent) => {
 
 const handlePopState = (event: PopStateEvent) => {
   console.log('🔙 Browser back button detected');
-  if (hasUserInput.value && !showSuccessDialog.value) {
+
+  if (isNavigating.value) {
+    console.log('⚠️ Already navigating, ignoring popstate');
+    return;
+  }
+
+  if (hasUserInput.value && !showSuccessDialog.value && !showConfirmDialog.value) {
     console.log('📝 Has user input, showing confirmation dialog');
     event.preventDefault();
     // ブラウザの履歴を元に戻す
     window.history.pushState(null, '', window.location.href);
-    pendingNavigation = () => window.history.back();
+    pendingNavigation = () => router.back();
     showConfirmDialog.value = true;
   }
 };
