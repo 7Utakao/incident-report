@@ -185,7 +185,11 @@ const generating = ref(false);
 const submitting = ref(false);
 const showSuccessDialog = ref(false);
 const showConfirmDialog = ref(false);
-let pendingNext: import('vue-router').NavigationGuardNext | null = null;
+let pendingNavigation: {
+  to: any;
+  from: any;
+  next: import('vue-router').NavigationGuardNext;
+} | null = null;
 
 const report = ref<Report>({
   title: '',
@@ -247,33 +251,23 @@ const clearContent = () => {
 };
 
 const handleBack = () => {
-  if (hasUserInput.value && !showSuccessDialog.value) {
-    pendingNext = () => router.back();
-    showConfirmDialog.value = true;
-  } else {
-    router.back();
-  }
+  router.back(); // Vue Routerガードが自動的に確認ダイアログを表示
 };
 
 const handleCancel = () => {
-  if (hasUserInput.value && !showSuccessDialog.value) {
-    pendingNext = () => navigateTo('/reports');
-    showConfirmDialog.value = true;
-  } else {
-    navigateTo('/reports');
-  }
+  navigateTo('/reports'); // Vue Routerガードが自動的に確認ダイアログを表示
 };
 
 const onConfirmLeave = () => {
-  if (!pendingNext) return;
-  const n = pendingNext;
-  pendingNext = null;
+  if (!pendingNavigation) return;
+  const { next } = pendingNavigation;
+  pendingNavigation = null;
   showConfirmDialog.value = false;
-  n(); // ナビゲーション実行
+  next(); // ナビゲーション実行
 };
 
 const onCancelLeave = () => {
-  pendingNext = null;
+  pendingNavigation = null;
   showConfirmDialog.value = false;
   // ダイアログを閉じるだけで、ナビゲーションはキャンセル
 };
@@ -369,7 +363,7 @@ const goToReportsList = () => {
 // Navigation guard
 onBeforeRouteLeave((to, from, next) => {
   if (hasUserInput.value && !showSuccessDialog.value) {
-    pendingNext = next;
+    pendingNavigation = { to, from, next };
     showConfirmDialog.value = true;
     next(false);
   } else {
