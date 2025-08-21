@@ -361,4 +361,9 @@ if (process.client) {
 useHead({
   title: '報告一覧 - 報告システム',
 });
+
+// 認証ガード
+definePageMeta({
+  middleware: 'auth',
+});
 </script>

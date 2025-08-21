@@ -376,4 +376,9 @@ onBeforeRouteLeave((to, from, next) => {
 useHead({
   title: '新しい報告を作成 - 報告システム',
 });
+
+// 認証ガード
+definePageMeta({
+  middleware: 'auth',
+});
 </script>
