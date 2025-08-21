@@ -65,20 +65,6 @@
               <ChartBarIcon class="mr-2 h-4 w-4" />
               ダッシュボード
             </NuxtLink>
-
-            <!-- 検索バー (デスクトップ) -->
-            <div class="ml-6">
-              <div class="relative">
-                <MagnifyingGlassIcon
-                  class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-ink/40"
-                />
-                <input
-                  type="text"
-                  placeholder="検索..."
-                  class="w-64 pl-10 pr-4 py-2 border border-primary/25 rounded-md bg-white text-ink placeholder-ink/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                />
-              </div>
-            </div>
           </nav>
 
           <!-- 右側のユーザーメニューとハンバーガーボタン -->
@@ -198,20 +184,6 @@
               <ChartBarIcon class="mr-3 h-5 w-5" />
               ダッシュボード
             </NuxtLink>
-
-            <!-- 検索バー (モバイル・タブレット) -->
-            <div class="px-3 py-2">
-              <div class="relative">
-                <MagnifyingGlassIcon
-                  class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-ink/40"
-                />
-                <input
-                  type="text"
-                  placeholder="検索..."
-                  class="w-full pl-10 pr-4 py-2 border border-primary/25 rounded-md bg-white text-ink placeholder-ink/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-                />
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -234,7 +206,6 @@ import {
   UserIcon,
   Bars3Icon,
   XMarkIcon,
-  MagnifyingGlassIcon,
   PlusIcon,
 } from '@heroicons/vue/24/outline';
 

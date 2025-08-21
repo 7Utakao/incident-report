@@ -36,15 +36,14 @@ export const useApi = () => {
         const token = await getIdToken();
         if (token) {
           headers.Authorization = `Bearer ${token}`;
+          console.log('JWT token added to request headers');
         } else {
-          // 開発環境では認証エラーを回避するためテスト用トークンを使用
-          console.warn('認証トークンが取得できませんでした。テスト用トークンを使用します。');
-          headers.Authorization = `Bearer test-token`;
+          console.error('認証トークンが取得できませんでした。ログインが必要です。');
+          throw new Error('認証が必要です。ログインしてください。');
         }
       } catch (authError) {
-        console.warn('認証エラー:', authError);
-        // 開発環境では認証エラーを回避するためテスト用トークンを使用
-        headers.Authorization = `Bearer test-token`;
+        console.error('認証エラー:', authError);
+        throw new Error('認証が必要です。ログインしてください。');
       }
     }
 
@@ -160,11 +159,15 @@ export const useApi = () => {
           const { getIdToken } = useAuth();
           const token = await getIdToken();
 
+          if (!token) {
+            throw new Error('認証が必要です。ログインしてください。');
+          }
+
           const response = await fetch(url, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              Authorization: `Bearer ${token || 'test-token'}`,
+              Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify({ content: originalText }),
           });
