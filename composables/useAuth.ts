@@ -1,10 +1,12 @@
-import { signIn, signOut, getCurrentUser, fetchAuthSession } from 'aws-amplify/auth';
+import { signIn, signOut, getCurrentUser, fetchAuthSession, confirmSignIn } from 'aws-amplify/auth';
 
 // グローバルな状態管理
 const globalUser = ref<any>(null);
 const globalIsAuthenticated = ref(false);
 const globalLoading = ref(false);
 const globalError = ref<string | null>(null);
+const globalNeedsNewPassword = ref(false);
+const globalSignInResult = ref<any>(null);
 
 export const useAuth = () => {
   // ログイン
@@ -51,6 +53,13 @@ export const useAuth = () => {
           globalIsAuthenticated.value = true;
           return true;
         }
+      } else if (
+        signInResult.nextStep?.signInStep === 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED'
+      ) {
+        console.log('新しいパスワードの設定が必要です');
+        globalSignInResult.value = signInResult;
+        globalNeedsNewPassword.value = true;
+        return 'NEEDS_NEW_PASSWORD';
       }
       console.log('Sign in failed or isSignedIn is false');
       return false;
@@ -117,6 +126,59 @@ export const useAuth = () => {
     }
   };
 
+  // 新しいパスワードを設定
+  const setNewPassword = async (newPassword: string) => {
+    console.log('setNewPassword called');
+    try {
+      globalLoading.value = true;
+      globalError.value = null;
+
+      if (!globalSignInResult.value) {
+        throw new Error('サインイン結果が見つかりません');
+      }
+
+      console.log('Calling confirmSignIn with new password...');
+      const confirmResult = await confirmSignIn({
+        challengeResponse: newPassword,
+      });
+
+      console.log('confirmSignIn result:', confirmResult);
+
+      if (confirmResult.isSignedIn) {
+        console.log('新しいパスワード設定成功、認証完了');
+        // 認証状態を更新
+        try {
+          const currentUser = await getCurrentUser();
+          if (currentUser) {
+            globalUser.value = currentUser;
+            globalIsAuthenticated.value = true;
+            globalNeedsNewPassword.value = false;
+            globalSignInResult.value = null;
+            console.log('認証状態を更新しました:', {
+              user: currentUser,
+              isAuthenticated: globalIsAuthenticated.value,
+            });
+            return true;
+          }
+        } catch (userError) {
+          console.error('ユーザー情報取得エラー:', userError);
+          // ユーザー情報取得に失敗してもログインは成功とみなす
+          globalIsAuthenticated.value = true;
+          globalNeedsNewPassword.value = false;
+          globalSignInResult.value = null;
+          return true;
+        }
+      }
+      return false;
+    } catch (err: any) {
+      console.error('新しいパスワード設定エラー:', err);
+      globalError.value = err.message || '新しいパスワードの設定に失敗しました';
+      return false;
+    } finally {
+      globalLoading.value = false;
+    }
+  };
+
   // IDトークンを取得
   const getIdToken = async (): Promise<string | null> => {
     try {
@@ -133,8 +195,10 @@ export const useAuth = () => {
     isAuthenticated: readonly(globalIsAuthenticated),
     loading: readonly(globalLoading),
     error: readonly(globalError),
+    needsNewPassword: readonly(globalNeedsNewPassword),
     login,
     logout,
+    setNewPassword,
     checkAuthStatus,
     getIdToken,
   };
