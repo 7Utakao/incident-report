@@ -4,7 +4,7 @@
       <!-- Header -->
       <div class="mb-8">
         <div class="flex items-center space-x-4 mb-4">
-          <Button variant="ghost" @click="$router.back()"> ← 戻る </Button>
+          <Button variant="ghost" @click="handleBack"> ← 戻る </Button>
         </div>
         <h1 class="text-3xl font-bold text-secondary">新しい報告を作成</h1>
         <p class="mt-2 text-gray">{{ COPY.newGuidance }}</p>
@@ -100,10 +100,9 @@
 
           <!-- Action Buttons -->
           <div class="flex justify-between pt-6">
-            <Button variant="ghost" @click="$router.back()"> キャンセル </Button>
+            <Button variant="ghost" @click="handleCancel"> キャンセル </Button>
             <div class="flex space-x-3">
               <Button variant="secondary" @click="clearContent"> クリア </Button>
-              <Button variant="secondary" @click="saveDraft"> 下書き保存 </Button>
               <Button
                 variant="primary"
                 :disabled="!isFormValid"
@@ -132,6 +131,26 @@
           </div>
         </template>
       </Dialog>
+
+      <!-- Confirmation Dialog -->
+      <Dialog
+        :open="showConfirmDialog"
+        title="入力内容を破棄しますか？"
+        @close="showConfirmDialog = false"
+      >
+        <div class="py-4">
+          <p class="text-gray">
+            入力した内容や生成されたデータが失われます。本当に画面を離れますか？
+          </p>
+        </div>
+
+        <template #footer>
+          <div class="flex justify-end space-x-3">
+            <Button variant="secondary" @click="showConfirmDialog = false"> いいえ </Button>
+            <Button variant="primary" @click="confirmLeave"> はい </Button>
+          </div>
+        </template>
+      </Dialog>
     </div>
   </div>
 </template>
@@ -141,6 +160,9 @@ import { ref, computed } from 'vue';
 import { format } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import { COPY } from '~/constants/copy';
+
+// Router
+const router = useRouter();
 
 // Components
 import Card from '~/components/ui/Card.vue';
@@ -160,12 +182,12 @@ interface Report {
 }
 
 // Reactive data
-const initialContent = ref(
-  'メール送信時の確認不足により、宛先を間違えて送信してしまいました。今後は送信前に宛先を二重チェックする仕組みを作りたいと思います。具体的には、送信ボタンを押す前に確認ダイアログを表示し、宛先リストを再度確認できるようにしたいと考えています。',
-);
+const initialContent = ref('');
 const generating = ref(false);
 const submitting = ref(false);
 const showSuccessDialog = ref(false);
+const showConfirmDialog = ref(false);
+let pendingNavigation: (() => void) | null = null;
 
 const report = ref<Report>({
   title: '',
@@ -191,6 +213,17 @@ const isFormValid = computed(() => {
     report.value.category &&
     report.value.occurredAt &&
     report.value.content.trim()
+  );
+});
+
+// 入力内容があるかどうかを判定
+const hasUserInput = computed(() => {
+  return (
+    initialContent.value.trim() ||
+    report.value.title.trim() ||
+    report.value.content.trim() ||
+    report.value.improvements.trim() ||
+    generating.value
   );
 });
 
@@ -222,6 +255,39 @@ const formatDate = (dateString: string) => {
 
 const clearContent = () => {
   initialContent.value = '';
+  report.value = {
+    title: '',
+    category: '',
+    occurredAt: new Date().toISOString().split('T')[0],
+    content: '',
+    improvements: '',
+  };
+};
+
+const handleBack = () => {
+  if (hasUserInput.value) {
+    pendingNavigation = () => router.back();
+    showConfirmDialog.value = true;
+  } else {
+    router.back();
+  }
+};
+
+const handleCancel = () => {
+  if (hasUserInput.value) {
+    pendingNavigation = () => navigateTo('/reports');
+    showConfirmDialog.value = true;
+  } else {
+    navigateTo('/reports');
+  }
+};
+
+const confirmLeave = () => {
+  showConfirmDialog.value = false;
+  if (pendingNavigation) {
+    pendingNavigation();
+    pendingNavigation = null;
+  }
 };
 
 const generateReport = async () => {
@@ -275,36 +341,6 @@ const generateReport = async () => {
   }
 };
 
-const saveDraft = async () => {
-  try {
-    const draftData = {
-      initialContent: initialContent.value,
-      report: report.value,
-      timestamp: new Date().toISOString(),
-    };
-
-    // Save to localStorage (in a real app, this would be saved to a server)
-    if (process.client) {
-      const existingDrafts = JSON.parse(localStorage.getItem('reportDrafts') || '[]');
-      const draftId = `draft_${Date.now()}`;
-
-      existingDrafts.push({
-        id: draftId,
-        ...draftData,
-        title: report.value.title || '無題の下書き',
-      });
-
-      localStorage.setItem('reportDrafts', JSON.stringify(existingDrafts));
-
-      // Show success message (in a real app, you'd use a toast notification)
-      alert('下書きを保存しました');
-    }
-  } catch (error) {
-    console.error('Draft save error:', error);
-    alert('下書きの保存に失敗しました');
-  }
-};
-
 const submitReport = async () => {
   try {
     submitting.value = true;
@@ -329,33 +365,29 @@ const submitReport = async () => {
 
 const createAnother = () => {
   showSuccessDialog.value = false;
-  initialContent.value = '';
-  report.value = {
-    title: '',
-    category: '',
-    occurredAt: new Date().toISOString().split('T')[0],
-    content: '',
-    improvements: '',
-  };
+  clearContent();
 };
 
 const handleDialogClose = () => {
   showSuccessDialog.value = false;
-  // モーダルを閉じた時にフォームを初期化
-  initialContent.value = '';
-  report.value = {
-    title: '',
-    category: '',
-    occurredAt: new Date().toISOString().split('T')[0],
-    content: '',
-    improvements: '',
-  };
+  clearContent();
 };
 
 const goToReportsList = () => {
   showSuccessDialog.value = false;
   navigateTo('/reports');
 };
+
+// Navigation guard
+onBeforeRouteLeave((to, from, next) => {
+  if (hasUserInput.value && !showSuccessDialog.value) {
+    pendingNavigation = () => next();
+    showConfirmDialog.value = true;
+    next(false);
+  } else {
+    next();
+  }
+});
 
 // Meta
 useHead({

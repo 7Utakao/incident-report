@@ -256,7 +256,6 @@ const getStatusVariant = (
     string,
     'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'outline'
   > = {
-    下書き: 'default',
     検討中: 'warning',
     実施中: 'primary',
     完了: 'success',
