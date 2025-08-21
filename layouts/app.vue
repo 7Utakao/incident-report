@@ -2,6 +2,7 @@
   <div class="min-h-screen bg-gradient-to-b from-primary/40 via-white to-white">
     <!-- サイドナビゲーション -->
     <aside
+      v-if="isAuthenticated"
       class="fixed inset-y-0 left-0 z-50 w-64 bg-primaryDeep text-white shadow-elev transform -translate-x-full lg:translate-x-0 transition-transform duration-200 ease-in-out"
       :class="{ 'translate-x-0': sidebarOpen }"
     >
@@ -70,9 +71,9 @@
     </aside>
 
     <!-- メインコンテンツ -->
-    <div class="lg:pl-64">
+    <div :class="isAuthenticated ? 'lg:pl-64' : ''">
       <!-- トップバー -->
-      <header class="bg-surface shadow-sm border-b border-primary/20">
+      <header v-if="isAuthenticated" class="bg-surface shadow-sm border-b border-primary/20">
         <div class="flex items-center justify-between h-16 px-4 sm:px-6">
           <div class="flex items-center">
             <button @click="sidebarOpen = true" class="lg:hidden text-ink/60 hover:text-ink">
@@ -101,7 +102,7 @@
             </div>
 
             <!-- ユーザーメニュー -->
-            <div class="relative">
+            <div v-if="isAuthenticated" class="relative">
               <Menu as="div" class="relative">
                 <MenuButton
                   class="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-primary"
@@ -145,7 +146,7 @@
       </header>
 
       <!-- ページコンテンツ -->
-      <main class="p-6">
+      <main :class="isAuthenticated ? 'p-6' : ''">
         <slot />
       </main>
     </div>
@@ -173,12 +174,13 @@ import {
   PlusIcon,
 } from '@heroicons/vue/24/outline';
 
-const { user, signOutUser, isAuthenticated, checkAuthState } = useAuth();
+const { user, logout, isAuthenticated, checkAuthStatus } = useAuth();
+const route = useRoute();
 const sidebarOpen = ref(false);
 
 const handleSignOut = async () => {
   try {
-    await signOutUser();
+    await logout();
   } catch (error) {
     console.error('Sign out error:', error);
   }
@@ -187,16 +189,23 @@ const handleSignOut = async () => {
 // 認証状態をチェック
 onMounted(async () => {
   if (process.client) {
-    const isAuth = await checkAuthState();
-    if (!isAuth) {
-      await navigateTo('/login');
+    try {
+      const isAuth = await checkAuthStatus();
+      if (!isAuth && !route.path.includes('/login')) {
+        await navigateTo('/login');
+      }
+    } catch (error) {
+      console.error('認証チェックエラー:', error);
+      if (!route.path.includes('/login')) {
+        await navigateTo('/login');
+      }
     }
   }
 });
 
 // 認証状態の変化を監視
 watch(isAuthenticated, (newValue) => {
-  if (!newValue) {
+  if (!newValue && !route.path.includes('/login')) {
     navigateTo('/login');
   }
 });

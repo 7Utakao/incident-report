@@ -1,74 +1,100 @@
 import { signIn, signOut, getCurrentUser, fetchAuthSession } from 'aws-amplify/auth';
 
-export const useAuth = () => {
-  const user = ref<any>(null);
-  const isAuthenticated = ref(false);
-  const loading = ref(false);
-  const error = ref<string | null>(null);
+// グローバルな状態管理
+const globalUser = ref<any>(null);
+const globalIsAuthenticated = ref(false);
+const globalLoading = ref(false);
+const globalError = ref<string | null>(null);
 
+export const useAuth = () => {
   // ログイン
-  const login = async (email: string, password: string) => {
+  const login = async (username: string, password: string) => {
     try {
-      loading.value = true;
-      error.value = null;
+      globalLoading.value = true;
+      globalError.value = null;
 
       const { isSignedIn } = await signIn({
-        username: email,
+        username: username,
         password: password,
       });
 
       if (isSignedIn) {
-        await checkAuthStatus();
-        return true;
+        // ログイン成功時は即座に認証状態を更新
+        try {
+          const currentUser = await getCurrentUser();
+          if (currentUser) {
+            globalUser.value = currentUser;
+            globalIsAuthenticated.value = true;
+            console.log('ログイン成功:', currentUser);
+            return true;
+          }
+        } catch (userError) {
+          console.error('ユーザー情報取得エラー:', userError);
+          // ユーザー情報取得に失敗してもログインは成功とみなす
+          globalIsAuthenticated.value = true;
+          return true;
+        }
       }
       return false;
     } catch (err: any) {
       console.error('ログインエラー:', err);
-      error.value = err.message || 'ログインに失敗しました';
+      if (err.name === 'UserNotFoundException') {
+        globalError.value = 'ユーザーが見つかりません';
+      } else if (err.name === 'NotAuthorizedException') {
+        globalError.value = 'ユーザー名またはパスワードが正しくありません';
+      } else {
+        globalError.value = err.message || 'ログインに失敗しました';
+      }
       return false;
     } finally {
-      loading.value = false;
+      globalLoading.value = false;
     }
   };
 
   // ログアウト
   const logout = async () => {
     try {
-      loading.value = true;
+      globalLoading.value = true;
       await signOut();
-      user.value = null;
-      isAuthenticated.value = false;
+      globalUser.value = null;
+      globalIsAuthenticated.value = false;
       await navigateTo('/login');
     } catch (err: any) {
       console.error('ログアウトエラー:', err);
-      error.value = err.message || 'ログアウトに失敗しました';
+      globalError.value = err.message || 'ログアウトに失敗しました';
     } finally {
-      loading.value = false;
+      globalLoading.value = false;
     }
   };
 
   // 認証状態をチェック
   const checkAuthStatus = async () => {
     try {
-      loading.value = true;
+      globalLoading.value = true;
       const currentUser = await getCurrentUser();
 
       if (currentUser) {
-        user.value = currentUser;
-        isAuthenticated.value = true;
+        globalUser.value = currentUser;
+        globalIsAuthenticated.value = true;
         return true;
       } else {
-        user.value = null;
-        isAuthenticated.value = false;
+        globalUser.value = null;
+        globalIsAuthenticated.value = false;
         return false;
       }
     } catch (err: any) {
+      // 認証エラーは正常な状態として扱う（未認証）
+      if (err.name === 'UserUnAuthenticatedException' || err.name === 'NotAuthorizedException') {
+        globalUser.value = null;
+        globalIsAuthenticated.value = false;
+        return false;
+      }
       console.error('認証状態チェックエラー:', err);
-      user.value = null;
-      isAuthenticated.value = false;
+      globalUser.value = null;
+      globalIsAuthenticated.value = false;
       return false;
     } finally {
-      loading.value = false;
+      globalLoading.value = false;
     }
   };
 
@@ -83,16 +109,11 @@ export const useAuth = () => {
     }
   };
 
-  // 初期化時に認証状態をチェック
-  onMounted(async () => {
-    await checkAuthStatus();
-  });
-
   return {
-    user: readonly(user),
-    isAuthenticated: readonly(isAuthenticated),
-    loading: readonly(loading),
-    error: readonly(error),
+    user: readonly(globalUser),
+    isAuthenticated: readonly(globalIsAuthenticated),
+    loading: readonly(globalLoading),
+    error: readonly(globalError),
     login,
     logout,
     checkAuthStatus,

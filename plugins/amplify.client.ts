@@ -9,11 +9,7 @@ export default defineNuxtPlugin(() => {
       Cognito: {
         userPoolId: config.public.userPoolId,
         userPoolClientId: config.public.userPoolClientId,
-        region: config.public.awsRegion,
         signUpVerificationMethod: 'code',
-        loginWith: {
-          email: true,
-        },
       },
     },
   });

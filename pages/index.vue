@@ -228,6 +228,11 @@ onMounted(() => {
 useHead({
   title: 'ホーム - 報告システム',
 });
+
+// 認証ガード
+definePageMeta({
+  middleware: 'auth',
+});
 </script>
 
 <style scoped>
