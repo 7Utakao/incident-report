@@ -19676,14 +19676,18 @@ var CreateReportSchema = external_exports.object({
   title: external_exports.string().optional(),
   tags: external_exports.array(external_exports.string()).optional(),
   category: external_exports.string().min(1).max(100),
-  createdAt: external_exports.string().optional()
+  createdAt: external_exports.string().optional(),
+  improvements: external_exports.string().optional()
 });
 var QueryParamsSchema = external_exports.object({
   category: external_exports.string().optional(),
   from: external_exports.string().optional(),
   to: external_exports.string().optional(),
   nextToken: external_exports.string().optional(),
-  q: external_exports.string().optional()
+  q: external_exports.string().optional(),
+  authorId: external_exports.string().optional(),
+  countOnly: external_exports.string().optional(),
+  limit: external_exports.string().optional()
 });
 var AiGenerateSchema = external_exports.object({
   content: external_exports.string().min(1).max(5e3)
@@ -20124,6 +20128,9 @@ var CATEGORIES = {
     group: "\u30EC\u30AC\u30B7\u30FC"
   }
 };
+function getCategoryDisplayName(code) {
+  return CATEGORIES[code]?.displayName || code;
+}
 function getAICategoryList() {
   const groups = Array.from(new Set(Object.values(CATEGORIES).map((c2) => c2.group)));
   return groups.map((group) => {
@@ -20853,7 +20860,8 @@ function dynamoToApi(item) {
     summary: item.Summary,
     tags: item.Tags,
     category: item.Category,
-    createdAt: item.CreatedAt
+    createdAt: item.CreatedAt,
+    improvements: item.Improvements
   };
 }
 function apiToDynamo(report, reportId, userId) {
@@ -20865,7 +20873,8 @@ function apiToDynamo(report, reportId, userId) {
     Summary: report.summary,
     Tags: report.tags,
     Category: report.category,
-    CreatedAt: report.createdAt || (/* @__PURE__ */ new Date()).toISOString()
+    CreatedAt: report.createdAt || (/* @__PURE__ */ new Date()).toISOString(),
+    Improvements: report.improvements
   };
 }
 async function createReport(reportItem) {
@@ -20898,7 +20907,8 @@ async function queryReports(params) {
   console.log("\u30D1\u30E9\u30E1\u30FC\u30BF:", params);
   console.log("\u30C6\u30FC\u30D6\u30EB\u540D:", DDB_REPORTS);
   console.log("\u30EA\u30FC\u30B8\u30E7\u30F3:", AWS_REGION);
-  const { category, from, to, nextToken, q: q2 } = params;
+  const { category, from, to, nextToken, q: q2, userId, limit: limit2 } = params;
+  const queryLimit = limit2 || 20;
   let command;
   let exclusiveStartKey;
   if (nextToken) {
@@ -20922,7 +20932,7 @@ async function queryReports(params) {
       },
       ScanIndexForward: false,
       // Descending order (newest first)
-      Limit: 20,
+      Limit: queryLimit,
       ExclusiveStartKey: exclusiveStartKey
     });
   } else {
@@ -20944,11 +20954,15 @@ async function queryReports(params) {
       filterExpressions.push("(contains(Title, :q) OR contains(Body, :q))");
       expressionAttributeValues[":q"] = q2;
     }
+    if (userId) {
+      filterExpressions.push("UserId = :userId");
+      expressionAttributeValues[":userId"] = userId;
+    }
     command = new import_lib_dynamodb.ScanCommand({
       TableName: DDB_REPORTS,
       FilterExpression: filterExpressions.length > 0 ? filterExpressions.join(" AND ") : void 0,
       ExpressionAttributeValues: Object.keys(expressionAttributeValues).length > 0 ? expressionAttributeValues : void 0,
-      Limit: 20,
+      Limit: queryLimit,
       ExclusiveStartKey: exclusiveStartKey
     });
   }
@@ -21031,8 +21045,20 @@ async function handleGetReports(event) {
       return createErrorResponse(401, "Unauthorized", "Valid JWT token required");
     }
     const queryParams = QueryParamsSchema.parse(event.queryStringParameters || {});
-    const { category, from, to, nextToken, q: q2 } = queryParams;
-    const result = await queryReports({ category, from, to, nextToken, q: q2 });
+    const { category, from, to, nextToken, q: q2, authorId, countOnly, limit: limit2 } = queryParams;
+    const actualAuthorId = authorId === "me" ? userId : authorId;
+    const result = await queryReports({
+      category,
+      from,
+      to,
+      nextToken,
+      q: q2,
+      userId: actualAuthorId,
+      limit: limit2 ? parseInt(limit2) : void 0
+    });
+    if (countOnly === "true") {
+      return createResponse(200, { count: result.items.length });
+    }
     const apiItems = result.items.map(dynamoToApi);
     const response = {
       items: apiItems
@@ -21076,6 +21102,103 @@ async function handleGetReport(event) {
   }
 }
 
+// handlers/stats.ts
+async function getStats(event) {
+  try {
+    const userId = await getUserId(event);
+    if (!userId) {
+      return createErrorResponse(401, "UNAUTHORIZED", "Authentication required");
+    }
+    const scope = event.queryStringParameters?.scope || "all";
+    const topN = parseInt(event.queryStringParameters?.topN || "10");
+    const tz = event.queryStringParameters?.tz || "Asia/Tokyo";
+    if (!["all", "month", "company", "user", "today"].includes(scope)) {
+      return createErrorResponse(
+        400,
+        "INVALID_SCOPE",
+        'Invalid scope parameter. Use "all", "month", "company", "user", or "today"'
+      );
+    }
+    let from;
+    let to;
+    if (scope === "month") {
+      const now = /* @__PURE__ */ new Date();
+      const year2 = now.getFullYear();
+      const month = now.getMonth();
+      const monthStart = new Date(year2, month, 1);
+      from = monthStart.toISOString().split("T")[0];
+      const monthEnd = new Date(year2, month + 1, 0);
+      to = monthEnd.toISOString().split("T")[0];
+    } else if (scope === "today") {
+      const now = /* @__PURE__ */ new Date();
+      const jstOffset = 9 * 60;
+      const jstTime = new Date(now.getTime() + jstOffset * 60 * 1e3);
+      const today = jstTime.toISOString().split("T")[0];
+      from = today;
+      to = today;
+    }
+    const queryParams = {};
+    if (from)
+      queryParams.from = from;
+    if (to)
+      queryParams.to = to;
+    if (scope === "user") {
+      queryParams.userId = userId;
+    }
+    const { items } = await queryReports(queryParams);
+    const categoryCount = {};
+    items.forEach((item) => {
+      const category = item.Category;
+      if (category) {
+        categoryCount[category] = (categoryCount[category] || 0) + 1;
+      }
+    });
+    const byCategory = Object.entries(categoryCount).map(([code, count]) => ({
+      code,
+      name: getCategoryDisplayName(code),
+      count
+    })).sort((a2, b2) => b2.count - a2.count).slice(0, topN);
+    const totalReports = items.length;
+    const advice = generateAdvice(byCategory, scope, totalReports);
+    const response = {
+      ok: true,
+      scope,
+      from,
+      to,
+      totalReports,
+      byCategory,
+      advice,
+      updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+    };
+    return createResponse(200, response);
+  } catch (error) {
+    console.error("Stats API error:", error);
+    return createErrorResponse(500, "INTERNAL_ERROR", "Internal server error");
+  }
+}
+function generateAdvice(categories, scope, totalReports) {
+  if (categories.length === 0) {
+    const scopeText2 = scope === "user" ? "\u3042\u306A\u305F\u306E" : "";
+    return `${scopeText2}\u76F4\u8FD1\u306E\u50BE\u5411\u306F\u78BA\u8A8D\u4E2D\u3067\u3059\u3002\u6C17\u3065\u304D\u304C\u3042\u308C\u3070\u77ED\u6587\u3067\u3082\u69CB\u3044\u307E\u305B\u3093\u3001\u307E\u305A\u306F\u4E00\u4EF6\u6295\u7A3F\u3057\u3066\u307F\u307E\u3057\u3087\u3046\u3002`;
+  }
+  const topCategory = categories[0];
+  let scopeText = "";
+  switch (scope) {
+    case "month":
+      scopeText = "\u4ECA\u6708\u306F";
+      break;
+    case "user":
+      scopeText = `\u3042\u306A\u305F\u306F${totalReports}\u4EF6\u306E\u5831\u544A\u3092\u3055\u308C\u3066\u304A\u308A\u3001`;
+      break;
+    case "company":
+      scopeText = "\u5168\u793E\u3067\u306F";
+      break;
+    default:
+      scopeText = "\u3053\u308C\u307E\u3067\u306B";
+  }
+  return `${scopeText}${topCategory.name}\u304C\u591A\u3044\u306E\u3067\u3001\u95A2\u9023\u624B\u9806\u306E\u898B\u76F4\u3057\u3068\u30C0\u30D6\u30EB\u30C1\u30A7\u30C3\u30AF\u3092\u5FB9\u5E95\u3057\u307E\u3057\u3087\u3046\u3002\u5831\u544A\u304C\u5C11\u306A\u3044\u9818\u57DF\u306F\u898B\u843D\u3068\u3057\u306E\u53EF\u80FD\u6027\u3082\u3042\u308B\u305F\u3081\u3001\u6C17\u3065\u3044\u305F\u3089\u7A4D\u6975\u7684\u306B\u5171\u6709\u3057\u307E\u3057\u3087\u3046\u3002`;
+}
+
 // index.ts
 var handler = async (event, context) => {
   try {
@@ -21099,6 +21222,8 @@ var handler = async (event, context) => {
           return await handleCreateReport(event);
         } else if (method === "GET" && path === "/reports") {
           return await handleGetReports(event);
+        } else if (method === "GET" && path === "/stats/categories") {
+          return await getStats(event);
         } else if (method === "GET" && path.startsWith("/reports/") && path !== "/reports") {
           const reportId = path.split("/reports/")[1];
           if (reportId) {
@@ -21120,6 +21245,8 @@ var handler = async (event, context) => {
             return await handleGetReports(event);
           case "GET /reports/{id}":
             return await handleGetReport(event);
+          case "GET /stats/categories":
+            return await getStats(event);
           default:
             if (method === "GET" && path.startsWith("/reports/") && path !== "/reports") {
               const reportId = path.split("/reports/")[1];

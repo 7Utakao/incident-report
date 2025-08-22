@@ -8,6 +8,7 @@ export interface ReportItem {
   Tags?: string[];
   Category: string;
   CreatedAt: string;
+  Improvements?: string;
 }
 
 export interface ApiReport {
@@ -19,6 +20,7 @@ export interface ApiReport {
   tags?: string[];
   category: string;
   createdAt: string;
+  improvements?: string;
 }
 
 export interface ProhibitedMatch {

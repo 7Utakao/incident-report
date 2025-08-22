@@ -4,6 +4,7 @@ import { handleHealth } from './handlers/health';
 import { handleAiGenerate } from './handlers/ai-generate';
 import { handleValidateReport } from './handlers/validate';
 import { handleCreateReport, handleGetReports, handleGetReport } from './handlers/reports';
+import { getStats } from './handlers/stats';
 
 // Main handler
 export const handler = async (
@@ -40,6 +41,8 @@ export const handler = async (
           return await handleCreateReport(event);
         } else if (method === 'GET' && path === '/reports') {
           return await handleGetReports(event);
+        } else if (method === 'GET' && path === '/stats/categories') {
+          return await getStats(event);
         } else if (method === 'GET' && path.startsWith('/reports/') && path !== '/reports') {
           // Extract report ID from path
           const reportId = path.split('/reports/')[1];
@@ -64,6 +67,8 @@ export const handler = async (
             return await handleGetReports(event);
           case 'GET /reports/{id}':
             return await handleGetReport(event);
+          case 'GET /stats/categories':
+            return await getStats(event);
           default:
             // Handle dynamic paths for API Gateway
             if (method === 'GET' && path.startsWith('/reports/') && path !== '/reports') {

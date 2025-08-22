@@ -68,14 +68,12 @@
 
             <!-- Date -->
             <div>
-              <Input v-model="report.occurredAt" label="発生日時" type="date" required />
+              <Input v-model="report.occurredAt" label="作成日時" type="date" required />
             </div>
 
             <!-- Content -->
             <div>
-              <label class="block text-sm font-medium text-secondary mb-2">
-                内容（AI整理済み）
-              </label>
+              <label class="block text-sm font-medium text-secondary mb-2"> 内容 </label>
               <textarea
                 v-model="report.content"
                 rows="8"
@@ -86,9 +84,7 @@
 
             <!-- Improvement Suggestions -->
             <div>
-              <label class="block text-sm font-medium text-secondary mb-2">
-                改善案（AI提案）
-              </label>
+              <label class="block text-sm font-medium text-secondary mb-2"> 改善案 </label>
               <textarea
                 v-model="report.improvements"
                 rows="6"
@@ -226,8 +222,8 @@ const hasUserInput = computed(() => {
 
 // Methods
 const getCategoryLabel = (value: string): string => {
-  const option = categoryOptions.find((opt) => opt.value === value);
-  return option?.label ?? value;
+  const option = categoryOptions.find((opt: any) => opt.value === value);
+  return option?.label || value;
 };
 
 const formatDate = (dateString: string) => {
@@ -323,14 +319,19 @@ const submitReport = async () => {
   try {
     submitting.value = true;
 
-    // 実際のAPI呼び出し
-    const { reports } = useApi();
-    await reports.create({
+    // デバッグログ: 送信データを確認
+    const submitData = {
       title: report.value.title,
       body: report.value.content,
       category: report.value.category,
       createdAt: report.value.occurredAt,
-    });
+      improvements: report.value.improvements, // 改善案を追加
+    };
+    console.log('🚀 レポート送信データ:', submitData);
+
+    // 実際のAPI呼び出し
+    const { reports } = useApi();
+    await reports.create(submitData);
 
     showSuccessDialog.value = true;
   } catch (error: any) {

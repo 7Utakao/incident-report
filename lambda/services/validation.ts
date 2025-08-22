@@ -8,6 +8,7 @@ export const CreateReportSchema = z.object({
   tags: z.array(z.string()).optional(),
   category: z.string().min(1).max(100),
   createdAt: z.string().optional(),
+  improvements: z.string().optional(),
 });
 
 export const QueryParamsSchema = z.object({
@@ -16,6 +17,9 @@ export const QueryParamsSchema = z.object({
   to: z.string().optional(),
   nextToken: z.string().optional(),
   q: z.string().optional(),
+  authorId: z.string().optional(),
+  countOnly: z.string().optional(),
+  limit: z.string().optional(),
 });
 
 export const AiGenerateSchema = z.object({
