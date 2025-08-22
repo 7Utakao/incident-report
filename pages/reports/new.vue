@@ -356,7 +356,9 @@ const goToReportsList = () => {
   navigateTo('/reports');
 };
 
-// Navigation guard
+// Navigation guard - 一時的に無効化（モーダルの「はい」ボタンが反応しないため）
+// TODO: 後でモーダルの動作を修正してから再有効化する
+/*
 onBeforeRouteLeave((to, from, next) => {
   if (hasUserInput.value && !showSuccessDialog.value) {
     pendingNavigation = { to, from, next };
@@ -366,6 +368,7 @@ onBeforeRouteLeave((to, from, next) => {
     next();
   }
 });
+*/
 
 // Meta
 useHead({
