@@ -74,7 +74,7 @@
 
           <template #cell-category="{ item }">
             <Badge :variant="getCategoryVariant(item.category)">
-              {{ item.category }}
+              {{ getCategoryDisplayName(item.category) }}
             </Badge>
           </template>
 
@@ -165,15 +165,13 @@ const filters = ref<Filters>({
   to: '',
 });
 
-// Options
-const categoryOptions = [
-  { value: '', label: 'すべてのカテゴリ' },
-  { value: '情報漏洩・誤送信', label: '情報漏洩・誤送信' },
-  { value: 'システム障害', label: 'システム障害' },
-  { value: '作業ミス', label: '作業ミス' },
-  { value: 'コミュニケーション', label: 'コミュニケーション' },
-  { value: 'その他', label: 'その他' },
-];
+// カテゴリオプション
+import {
+  getCategoryOptions,
+  getCategoryDisplayName,
+  getCategoryVariant,
+} from '~/constants/categories';
+const categoryOptions = getCategoryOptions();
 
 // Table columns
 const tableColumns = [
@@ -233,21 +231,6 @@ const paginatedReports = computed(() => {
 });
 
 // Methods
-const getCategoryVariant = (
-  category: string,
-): 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'outline' => {
-  const variants: Record<
-    string,
-    'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'outline'
-  > = {
-    '情報漏洩・誤送信': 'error',
-    システム障害: 'warning',
-    作業ミス: 'primary',
-    コミュニケーション: 'secondary',
-    その他: 'default',
-  };
-  return variants[category] || 'default';
-};
 
 const getStatusVariant = (
   status: string,

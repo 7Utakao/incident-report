@@ -1,0 +1,1 @@
+import{Q as o,R as s,s as u}from"./BBGXoVXL.js";import{u as n}from"./Dzv0W22B.js";const h=o(async(r,c)=>{let t,e;const{checkAuthStatus:a}=n();if(!([t,e]=s(()=>a()),t=await t,e(),t))return u("/login")});export{h as default};

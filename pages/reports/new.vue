@@ -199,14 +199,9 @@ const report = ref<Report>({
   improvements: '',
 });
 
-// Options
-const categoryOptions = [
-  { value: '情報漏洩・誤送信', label: '情報漏洩・誤送信' },
-  { value: 'システム障害', label: 'システム障害' },
-  { value: '作業ミス', label: '作業ミス' },
-  { value: 'コミュニケーション', label: 'コミュニケーション' },
-  { value: 'その他', label: 'その他' },
-];
+// カテゴリオプション
+import { getCategoryOptions } from '~/constants/categories';
+const categoryOptions = getCategoryOptions();
 
 // Computed
 const isFormValid = computed(() => {
@@ -291,7 +286,7 @@ const generateReport = async () => {
     // フォームへ反映
     report.value = {
       title: String(result.title || 'AI生成タイトル'),
-      category: String(result.category || 'その他'),
+      category: String(result.category || 'LEGACY_005'), // デフォルトは「その他」
       occurredAt: new Date().toISOString().split('T')[0],
       content: String(result.summary || initialContent.value),
       improvements: Array.isArray(result.improvements)

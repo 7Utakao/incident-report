@@ -1,4 +1,5 @@
 import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime';
+import { getAICategoryList } from '../constants/categories';
 
 // Types
 interface AIResponse {
@@ -87,16 +88,21 @@ async function generateWithBedrock(content: string): Promise<AIResponse> {
 
   const bedrockClient = new BedrockRuntimeClient({ region });
 
+  const categoryList = getAICategoryList();
+
   const prompt = `
 以下のインシデント報告の原文を分析し、必ずJSON形式で回答してください。
 
 原文:
 ${content}
 
+利用可能なカテゴリ:
+${categoryList}
+
 以下のJSON形式で回答してください（他の文章は一切含めないでください）:
 {
   "title": "適切なタイトル（50文字以内）",
-  "category": "情報漏洩・誤送信|システム障害|作業ミス|コミュニケーション|その他",
+  "category": "WHY_XXX_XXX形式のカテゴリコード",
   "summary": "要約された内容（個人情報を匿名化済み）",
   "improvements": "具体的な改善提案（箇条書き形式）",
   "suggestedReplacements": []
@@ -104,7 +110,8 @@ ${content}
 
 注意事項:
 - 個人情報（名前、メールアドレス、電話番号など）は匿名化してください
-- カテゴリは必ず指定された5つの中から選択してください
+- カテゴリは必ず上記のカテゴリリストから最も適切なコード（例：WHY_REQ_001）を選択してください
+- インシデントの根本原因を分析し、最も適切なカテゴリを選んでください
 - 改善提案は具体的で実行可能なものにしてください
 - JSONの形式を厳密に守ってください
 `;
@@ -150,16 +157,21 @@ async function generateWithOpenAI(content: string): Promise<AIResponse> {
 
   const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
 
+  const categoryList = getAICategoryList();
+
   const prompt = `
 以下のインシデント報告の原文を分析し、必ずJSON形式で回答してください。
 
 原文:
 ${content}
 
+利用可能なカテゴリ:
+${categoryList}
+
 以下のJSON形式で回答してください（他の文章は一切含めないでください）:
 {
   "title": "適切なタイトル（50文字以内）",
-  "category": "情報漏洩・誤送信|システム障害|作業ミス|コミュニケーション|その他",
+  "category": "WHY_XXX_XXX形式のカテゴリコード",
   "summary": "要約された内容（個人情報を匿名化済み）",
   "improvements": "具体的な改善提案（箇条書き形式）",
   "suggestedReplacements": []
@@ -167,7 +179,8 @@ ${content}
 
 注意事項:
 - 個人情報（名前、メールアドレス、電話番号など）は匿名化してください
-- カテゴリは必ず指定された5つの中から選択してください
+- カテゴリは必ず上記のカテゴリリストから最も適切なコード（例：WHY_REQ_001）を選択してください
+- インシデントの根本原因を分析し、最も適切なカテゴリを選んでください
 - 改善提案は具体的で実行可能なものにしてください
 - JSONの形式を厳密に守ってください
 `;
