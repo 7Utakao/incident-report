@@ -65,7 +65,31 @@ export const useAuth = () => {
       return false;
     } catch (err: any) {
       console.error('ログインエラー:', err);
-      if (err.name === 'UserNotFoundException') {
+
+      // 既にサインイン済みの場合の処理
+      if (
+        err.name === 'AlreadySignedInException' ||
+        err.message?.includes('There is already a signed in user')
+      ) {
+        console.log('既にサインイン済みです、認証状態を更新します');
+        try {
+          const currentUser = await getCurrentUser();
+          if (currentUser) {
+            globalUser.value = currentUser;
+            globalIsAuthenticated.value = true;
+            console.log('既存のサインイン状態を認識しました:', {
+              user: currentUser,
+              isAuthenticated: globalIsAuthenticated.value,
+            });
+            return true;
+          }
+        } catch (userError) {
+          console.error('既存ユーザー情報取得エラー:', userError);
+          // ユーザー情報取得に失敗してもログインは成功とみなす
+          globalIsAuthenticated.value = true;
+          return true;
+        }
+      } else if (err.name === 'UserNotFoundException') {
         globalError.value = 'ユーザーが見つかりません';
       } else if (err.name === 'NotAuthorizedException') {
         globalError.value = 'ユーザー名またはパスワードが正しくありません';

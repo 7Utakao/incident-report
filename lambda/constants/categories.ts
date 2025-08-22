@@ -443,16 +443,47 @@ export function getCategoryVariant(
   }
 }
 
-// AI生成用のカテゴリリスト（プロンプトで使用）
+// AI生成用の詳細カテゴリリスト（プロンプトで使用）
 export function getAICategoryList(): string {
   const groups = Array.from(new Set(Object.values(CATEGORIES).map((c) => c.group)));
   return groups
     .map((group) => {
       const categoriesInGroup = Object.values(CATEGORIES)
         .filter((c) => c.group === group)
-        .map((c) => `${c.code}: ${c.displayName}`)
-        .join(', ');
-      return `${group}: ${categoriesInGroup}`;
+        .map((c) => `${c.code}: ${c.displayName} - ${c.description}`)
+        .join('\n  ');
+      return `**${group}:**\n  ${categoriesInGroup}`;
     })
-    .join('\n');
+    .join('\n\n');
+}
+
+// 分類例を含む詳細ガイド
+export function getCategoryExamples(): string {
+  return `
+## 分類例とガイドライン:
+
+**要求仕様関連の例:**
+- 「スコープを勘違いして多く実装してしまった」→ WHY_REQ_002: 要求仕様不明確
+- 「要件理解が甘く間違った解釈で進めた」→ WHY_REQ_001: 期待値合意不足
+- 「仕様変更が伝わらず古い仕様で実装」→ WHY_REQ_003: 要求変更管理不備
+
+**実装関連 vs 要求仕様関連の判断:**
+- 実装技術やコーディング手法の問題 → 実装関連
+- 何を作るべきかの理解不足 → 要求仕様関連
+
+**人的要因関連の例:**
+- 「新人で技術知識が不足していた」→ WHY_HUM_001: スキル不足
+- 「研修を受けずに作業を開始した」→ WHY_HUM_002: 教育・研修不足
+- 「残業続きで集中力が低下していた」→ WHY_HUM_003: 作業負荷過多
+
+**プロセス・手順関連の例:**
+- 「手順書が古く実際の手順と異なっていた」→ WHY_PRC_001: 手順書不備
+- 「レビューが形式的で問題を見逃した」→ WHY_PRC_002: チェック体制不備
+- 「承認者が不在で勝手に進めた」→ WHY_PRC_003: 承認プロセス不備
+
+**コミュニケーション関連の例:**
+- 「チーム間で情報が共有されていなかった」→ WHY_COM_001: 情報共有不足
+- 「問題が発生したが報告しなかった」→ WHY_COM_002: 報告・連絡不備
+- 「設計書が更新されておらず古い情報で作業」→ WHY_COM_003: ドキュメント不備
+`;
 }

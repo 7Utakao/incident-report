@@ -297,6 +297,18 @@ const handleSetNewPassword = async () => {
   }
 };
 
+// ページ読み込み時に認証状態をチェック
+onMounted(async () => {
+  console.log('ログイン画面がマウントされました、認証状態をチェック中...');
+  const { checkAuthStatus } = useAuth();
+  const authenticated = await checkAuthStatus();
+
+  if (authenticated) {
+    console.log('既にログイン済みです、ホーム画面にリダイレクトします');
+    await navigateTo('/');
+  }
+});
+
 // 認証状態の変化を監視してナビゲート
 watch(
   isAuthenticated,
@@ -306,7 +318,7 @@ watch(
       await navigateTo('/');
     }
   },
-  { immediate: true },
+  { immediate: false }, // onMountedで既にチェックしているのでimmediateはfalse
 );
 
 // Meta
