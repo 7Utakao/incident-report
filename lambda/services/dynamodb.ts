@@ -27,6 +27,7 @@ export function dynamoToApi(item: ReportItem): ApiReport {
     tags: item.Tags,
     category: item.Category,
     createdAt: item.CreatedAt,
+    improvements: item.Improvements,
   };
 }
 
@@ -44,6 +45,7 @@ export function apiToDynamo(
     Tags: report.tags,
     Category: report.category!,
     CreatedAt: report.createdAt || new Date().toISOString(),
+    Improvements: report.improvements,
   };
 }
 
@@ -85,13 +87,16 @@ export async function queryReports(params: {
   to?: string;
   nextToken?: string;
   q?: string;
+  userId?: string;
+  limit?: number;
 }): Promise<{ items: ReportItem[]; lastEvaluatedKey?: any }> {
   console.log('🔍 queryReports 開始');
   console.log('パラメータ:', params);
   console.log('テーブル名:', DDB_REPORTS);
   console.log('リージョン:', AWS_REGION);
 
-  const { category, from, to, nextToken, q } = params;
+  const { category, from, to, nextToken, q, userId, limit } = params;
+  const queryLimit = limit || 20;
 
   let command;
   let exclusiveStartKey;
@@ -118,7 +123,7 @@ export async function queryReports(params: {
         ':to': to,
       },
       ScanIndexForward: false, // Descending order (newest first)
-      Limit: 20,
+      Limit: queryLimit,
       ExclusiveStartKey: exclusiveStartKey,
     });
   } else {
@@ -147,12 +152,18 @@ export async function queryReports(params: {
       expressionAttributeValues[':q'] = q;
     }
 
+    // User ID filter
+    if (userId) {
+      filterExpressions.push('UserId = :userId');
+      expressionAttributeValues[':userId'] = userId;
+    }
+
     command = new ScanCommand({
       TableName: DDB_REPORTS,
       FilterExpression: filterExpressions.length > 0 ? filterExpressions.join(' AND ') : undefined,
       ExpressionAttributeValues:
         Object.keys(expressionAttributeValues).length > 0 ? expressionAttributeValues : undefined,
-      Limit: 20,
+      Limit: queryLimit,
       ExclusiveStartKey: exclusiveStartKey,
     });
   }

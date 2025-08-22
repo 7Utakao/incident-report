@@ -65,9 +65,26 @@ export async function handleGetReports(
     }
 
     const queryParams = QueryParamsSchema.parse(event.queryStringParameters || {});
-    const { category, from, to, nextToken, q } = queryParams;
+    const { category, from, to, nextToken, q, authorId, countOnly, limit } = queryParams;
 
-    const result = await queryReports({ category, from, to, nextToken, q });
+    // authorId=me の場合は現在のユーザーIDに置き換え
+    const actualAuthorId = authorId === 'me' ? userId : authorId;
+
+    const result = await queryReports({
+      category,
+      from,
+      to,
+      nextToken,
+      q,
+      userId: actualAuthorId,
+      limit: limit ? parseInt(limit) : undefined,
+    });
+
+    // countOnlyが指定されている場合は件数のみ返す
+    if (countOnly === 'true') {
+      return createResponse(200, { count: result.items.length });
+    }
+
     const apiItems = result.items.map(dynamoToApi);
 
     const response: any = {

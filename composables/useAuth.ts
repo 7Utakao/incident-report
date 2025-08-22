@@ -1,4 +1,6 @@
 import { signIn, signOut, getCurrentUser, fetchAuthSession, confirmSignIn } from 'aws-amplify/auth';
+import { Amplify } from 'aws-amplify';
+import { waitForAmplifyInit } from '~/plugins/amplify.client';
 
 // グローバルな状態管理
 const globalUser = ref<any>(null);
@@ -16,6 +18,29 @@ export const useAuth = () => {
       console.log('Setting loading to true');
       globalLoading.value = true;
       globalError.value = null;
+
+      // Amplifyの初期化完了を待機
+      console.log('Waiting for Amplify initialization...');
+      await waitForAmplifyInit();
+      console.log('Amplify initialization completed');
+
+      // Amplifyの設定状態を確認
+      try {
+        const config = Amplify.getConfig();
+        console.log('Current Amplify config in login:', config);
+
+        // Amplify v6では設定の構造が異なる可能性があるため、より柔軟にチェック
+        const hasAuthConfig =
+          config && (config.Auth?.Cognito?.userPoolId || Object.keys(config).length > 0);
+
+        if (!hasAuthConfig) {
+          throw new Error('Amplify Auth configuration is missing');
+        }
+      } catch (configError) {
+        console.error('Amplify configuration check failed:', configError);
+        globalError.value = '認証システムの設定に問題があります';
+        return false;
+      }
 
       console.log('Calling AWS Cognito signIn...');
       const signInResult = await signIn({
@@ -138,6 +163,10 @@ export const useAuth = () => {
 
     try {
       globalLoading.value = true;
+
+      // Amplifyの初期化完了を待機
+      await waitForAmplifyInit();
+
       const currentUser = await getCurrentUser();
 
       if (currentUser) {

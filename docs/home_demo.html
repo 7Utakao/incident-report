@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ホーム（デモ）— インシデント学習プラットフォーム</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root { color-scheme: light; }
+    body { background: radial-gradient(1200px 600px at 50% -20%, #e6f1ff 0%, #f6fbff 35%, #ffffff 70%); }
+    <style>
+    :root { color-scheme: light; }
+    /* 背景をやさしいミント系に */
+    body { background: radial-gradient(1200px 600px at 50% -20%, #ecfdf5 0%, #f6fff9 40%, #ffffff 72%); }
+    /* 吹き出しのしっぽ */
+    .bubble { position: relative; }
+    .bubble:before { content: ""; position: absolute; left: -6px; top: 14px; width: 12px; height: 12px; background: white; border: 1px solid rgba(0,0,0,0.06); transform: rotate(45deg); border-right-color: transparent; border-bottom-color: transparent; }
+  </style>
+</head>
+<body class="min-h-screen text-gray-900">
+  <!-- ヘッダー（デモ） -->
+  <header class="sticky top-0 z-10 backdrop-blur bg-white/60 border-b">
+    <div class="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-7 h-7 rounded-full bg-lime-500/15 grid place-items-center text-lime-600">🌱</div>
+        <span class="font-semibold tracking-tight">報告システム</span>
+      </div>
+      <nav class="text-sm text-gray-500 flex items-center gap-6">
+        <a href="#" class="hover:text-gray-700">ホーム</a>
+        <a href="#" class="hover:text-gray-700">報告一覧</a>
+        <a href="#" class="hover:text-gray-700">ダッシュボード</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-6 py-8 space-y-8">
+    <!-- ヒーロー：説明文 + キャラクター -->
+    <section class="rounded-2xl border bg-white/70 backdrop-blur p-6 shadow-sm">
+      <div class="grid grid-cols-1 md:grid-cols-[auto,1fr] gap-6 items-center">
+        <!-- キャラクター（仮） -->
+        <div class="flex items-center gap-4">
+          <div class="relative">
+            <!-- 透過背景の想定：後で差し替え -->
+            <img id="mascot" src="https://placehold.co/96x96/png?text=%F0%9F%98%8A&bg=transparent" alt="マスコット" class="w-16 h-16 md:w-24 md:h-24 rounded-full object-contain bg-transparent ring-1 ring-emerald-100" />
+          </div>
+          <!-- 吹き出し（短文） -->
+          <div id="bubble" class="bubble bg-white border border-black/5 rounded-2xl px-4 py-3 text-sm md:text-base text-gray-800 shadow-sm">—</div>
+        </div>
+        <!-- 説明文（ヒーローコピー） -->
+        <div class="text-sm md:text-base leading-relaxed text-gray-700">
+          現場のつまずき・気づき・改善案を安全に匿名化して蓄積し、カテゴリで見える化する社内プラットフォームです。入力はシンプル。AI が要約とタグ付けを手伝います。
+        </div>
+      </div>
+    </section>
+
+    <!-- レベル状況：会社 / 個人 の2本バー -->
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="rounded-2xl border bg-white p-6 shadow-sm">
+        <div class="text-sm text-gray-500">会社レベル</div>
+        <div id="orgLevelLabel" class="mt-1 text-xl font-semibold">Lv — —</div>
+        <div class="mt-4 h-2 rounded-full bg-gray-100 overflow-hidden">
+          <div id="orgLevelBar" class="h-full rounded-full bg-emerald-500" style="width:0%"></div>
+        </div>
+        <div id="orgRemain" class="mt-2 text-xs text-gray-500">次のレベルまで — 件</div>
+      </div>
+
+      <div class="rounded-2xl border bg-white p-6 shadow-sm">
+        <div class="text-sm text-gray-500">個人レベル</div>
+        <div id="meLevelLabel" class="mt-1 text-xl font-semibold">Lv — —</div>
+        <div class="mt-4 h-2 rounded-full bg-gray-100 overflow-hidden">
+          <div id="meLevelBar" class="h-full rounded-full bg-lime-500" style="width:0%"></div>
+        </div>
+        <div id="meRemain" class="mt-2 text-xs text-gray-500">次のレベルまで — 件</div>
+      </div>
+    </section>
+
+    <!-- 最近の報告 -->
+    <section class="rounded-2xl border bg-white p-6 shadow-sm">
+      <div class="flex items-center justify-between">
+        <h2 class="text-base font-semibold">最近の報告</h2>
+        <a href="#" class="text-sm text-emerald-700 hover:underline">すべての報告を見る</a>
+      </div>
+      <div id="recent" class="mt-4 divide-y">
+        <!-- JSで挿入 -->
+      </div>
+    </section>
+
+    <p class="text-xs text-gray-400">※ このデモはダミーデータで表示しています。API 連携時は Cline に <code>API_BASE</code> と Authorization ヘッダーの差し込みを依頼してください。</p>
+  </main>
+
+  <script>
+    // ==============================
+    //  設定（API_BASE を指定すると接続を試みる）
+    // ==============================
+    const API_BASE = window.API_BASE || '';
+    // 祝メッセージ（当日だけ表示する想定）
+    const LEVELED_UP_TODAY = false; // API で判定して置き換え
+
+    // レベル名（会社 / 個人 共通）
+    const LEVEL_NAMES = ['ひよっこ','たねまき','見習い','研究者','冒険者','達人','師範','先導者','伝道師'];
+    // レベル n -> n+1 に必要な件数（増加していく）
+    const STEP_NEED = [6,8,10,13,16,20,24,28]; // 1→2, 2→3 ...
+
+    const demo = {
+      todayCount: 3,
+      totalCount: 47,
+      orgXp: 47,    // 会社合計の報告数 = XP
+      meXp: 12,     // 個人の報告数 = XP
+      recent: [
+        { title:'機密資料の誤送信インシデント', category:'情報漏洩・強杜支援', createdAt:'2025-08-20', text:'誤った宛先に資料を送付。差し戻し手順を整備しました。' },
+        { title:'データベース接続エラー', category:'システム障害', createdAt:'2025-08-19', text:'接続プール枯渇。監視閾値とリトライ方針を見直し。' },
+        { title:'顧客情報の入力ミス', category:'作業ミス', createdAt:'2025-08-18', text:'住所の番地ずれ。チェックリストを更新。' }
+      ]
+    };
+
+    // XP からレベル情報を算出
+    function levelFromXp(xp){
+      let lvl = 1; // 1=ひよっこ
+      let needIdx = 0, acc = 0;
+      while (needIdx < STEP_NEED.length && xp >= acc + STEP_NEED[needIdx]) {
+        acc += STEP_NEED[needIdx];
+        needIdx++; lvl++;
+      }
+      const nextNeed = needIdx < STEP_NEED.length ? STEP_NEED[needIdx] : STEP_NEED[STEP_NEED.length-1];
+      const inLevel = xp - acc;
+      const remain = Math.max(0, nextNeed - inLevel);
+      const pct = Math.min(100, Math.round(inLevel / nextNeed * 100));
+      const name = LEVEL_NAMES[Math.min(lvl-1, LEVEL_NAMES.length-1)];
+      return { lvl, name, remain, pct };
+    }
+
+    // メッセージ（3種類・短文）
+    function buildMessages({todayCount,totalCount,remain}){
+      return [
+        `学びを分かち合おう。`,
+        `今日は${todayCount}件。計${totalCount}件。あと${remain}件でレベルUP。`,
+        `気づいたら、すぐ書こう。`
+      ];
+    }
+
+    function tagColor(cat){
+      const map = [
+        { bg:'bg-emerald-50', text:'text-emerald-700' },
+        { bg:'bg-amber-50',   text:'text-amber-700' },
+        { bg:'bg-rose-50',    text:'text-rose-700' },
+        { bg:'bg-sky-50',     text:'text-sky-700' },
+        { bg:'bg-lime-50',    text:'text-lime-700' },
+        { bg:'bg-violet-50',  text:'text-violet-700' }
+      ];
+      // 簡易ハッシュで安定色
+      let h = 0; const s = String(cat||'');
+      for(let i=0;i<s.length;i++){ h = (h*31 + s.charCodeAt(i)) >>> 0; }
+      return map[h % map.length];
+    }
+
+    function setBubble(msgs){
+      const el = document.getElementById('bubble');
+      const msg = LEVELED_UP_TODAY ? `おめでとうございます！レベルが上がりました 🎆` : msgs[Math.floor(Math.random()*msgs.length)];
+      el.textContent = msg;
+    }
+
+    function renderLevels(orgXp, meXp){
+      const o = levelFromXp(orgXp);
+      const m = levelFromXp(meXp);
+      document.getElementById('orgLevelLabel').textContent = `Lv ${o.lvl} ${o.name}`;
+      document.getElementById('orgLevelBar').style.width = `${o.pct}%`;
+      document.getElementById('orgRemain').textContent = `次のレベルまで ${o.remain} 件`;
+
+      document.getElementById('meLevelLabel').textContent = `Lv ${m.lvl} ${m.name}`;
+      document.getElementById('meLevelBar').style.width = `${m.pct}%`;
+      document.getElementById('meRemain').textContent = `次のレベルまで ${m.remain} 件`;
+
+      return {remainForMessage: o.remain};
+    }
+
+    function renderRecent(items){
+      const wrap = document.getElementById('recent');
+      wrap.innerHTML = '';
+      if(!items || !items.length){
+        wrap.innerHTML = `<div class="py-8 text-center text-gray-400">まだ報告がありません。</div>`;
+        return;
+      }
+      for(const it of items){
+        const row = document.createElement('div');
+        row.className = 'py-3 grid grid-cols-[7rem,1fr,auto] items-start gap-3';
+        const color = tagColor(it.category);
+        row.innerHTML = `
+          <span class="inline-flex w-28 shrink-0 justify-center rounded-full ${color.bg} ${color.text} text-[11px] px-2 py-1 whitespace-nowrap overflow-hidden text-ellipsis">${(it.category||'—')}</span>
+          <div class="min-w-0">
+            <div class="font-medium truncate">${it.title||'（無題）'}</div>
+            <div class="text-xs text-gray-500 line-clamp-2">${it.text||''}</div>
+          </div>
+          <div class="ml-auto text-xs text-gray-400">${it.createdAt||''}</div>
+        `;
+        wrap.appendChild(row);
+      }
+    }
+      for(const it of items){
+        const row = document.createElement('div');
+        row.className = 'py-3 grid grid-cols-[7rem,1fr,auto] items-start gap-3';
+        // タグは一定幅で省略表示（タイトル縦位置を揃える）
+        const color = tagColor(it.category);
+        row.innerHTML = `
+          <span class="inline-flex w-28 shrink-0 justify-center rounded-full ${color.bg} ${color.text} text-[11px] px-2 py-1 whitespace-nowrap overflow-hidden text-ellipsis">${(it.category||'—')}</span>
+          <div class="min-w-0">
+            <div class="font-medium truncate">${it.title||'（無題）'}</div>
+            <div class="text-xs text-gray-500 line-clamp-2">${it.text||''}</div>
+          </div>
+          <div class="ml-auto text-xs text-gray-400">${it.createdAt||''}</div>
+        `;
+        wrap.appendChild(row);
+      }
+    }
+
+    async function init(){
+      let today = demo.todayCount, total = demo.totalCount, orgXp = demo.orgXp, meXp = demo.meXp, recent = demo.recent;
+
+      // API 連携（失敗時はデモ値）
+      if(API_BASE){
+        try{
+          // 例：/stats/categories?scope=all から totalReports を取得
+          const resAll = await fetch(`${API_BASE}/stats/categories?scope=all`);
+          if(resAll.ok){
+            const j = await resAll.json();
+            total = j.totalReports ?? total;
+            orgXp = j.totalReports ?? orgXp;
+          }
+          // 例：/stats/categories?scope=today から今日の件数
+          const resToday = await fetch(`${API_BASE}/stats/categories?scope=today&tz=Asia/Tokyo`);
+          if(resToday.ok){
+            const j = await resToday.json();
+            today = j.totalReports ?? today;
+          }
+          // 最近の報告
+          const resRecent = await fetch(`${API_BASE}/reports?limit=5`);
+          if(resRecent.ok){
+            const j = await resRecent.json();
+            recent = (j.items||j.reports||[]).map(r=>({
+              title: r.title || r.summary || '（無題）',
+              category: r.category || (r.categories && r.categories[0]) || '—',
+              text: r.summary || r.body || '',
+              createdAt: r.createdAt || ''
+            }));
+          }
+        }catch(e){ console.warn('API連携に失敗（デモで表示）', e); }
+      }
+
+      // レベル描画
+      const {remainForMessage} = renderLevels(orgXp, meXp);
+
+      // メッセージ
+      const msgs = buildMessages({todayCount: today, totalCount: total, remain: remainForMessage});
+      setBubble(msgs);
+
+      // 最近の報告
+      renderRecent(recent);
+    }
+
+    init();
+  </script>
+</body>
+</html>

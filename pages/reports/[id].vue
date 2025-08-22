@@ -30,74 +30,70 @@
 
       <!-- Report Content -->
       <div v-else-if="report" class="space-y-6">
-        <!-- Title and Meta -->
-        <Card>
-          <div class="space-y-4">
-            <div class="flex items-start justify-between">
-              <div class="flex-1">
-                <h2 class="text-2xl font-bold text-secondary mb-2">{{ report.title }}</h2>
-                <div class="flex items-center space-x-4 text-sm text-gray">
-                  <span>作成者: {{ report.author }}</span>
-                  <span>•</span>
-                  <span>{{ formatDate(report.createdAt) }}</span>
-                </div>
+        <!-- Header with Edit Button -->
+        <div class="flex items-center justify-between">
+          <div></div>
+          <Button
+            v-if="report.userId === currentUserId"
+            variant="primary"
+            size="sm"
+            @click="editReport"
+          >
+            編集
+          </Button>
+        </div>
+
+        <!-- Report Form (Read-only) -->
+        <Card title="インシデント報告">
+          <div class="space-y-6">
+            <!-- Title -->
+            <div>
+              <label class="block text-sm font-medium text-secondary mb-2">タイトル</label>
+              <div
+                class="w-full px-3 py-2 border border-gray-300 rounded-token-md bg-gray-50 text-secondary"
+              >
+                {{ report.title }}
               </div>
-              <div class="flex items-center space-x-2">
+            </div>
+
+            <!-- Category -->
+            <div>
+              <label class="block text-sm font-medium text-secondary mb-2">カテゴリ</label>
+              <div class="w-full px-3 py-2 border border-gray-300 rounded-token-md bg-gray-50">
                 <Badge :variant="getCategoryVariant(report.category)">
-                  {{ report.category }}
+                  {{ getCategoryDisplayName(report.category) }}
                 </Badge>
-                <Button
-                  v-if="report.userId === currentUserId"
-                  variant="primary"
-                  size="sm"
-                  @click="editReport"
-                >
-                  編集
-                </Button>
               </div>
             </div>
-          </div>
-        </Card>
 
-        <!-- Summary -->
-        <Card title="要約">
-          <p class="text-secondary leading-relaxed">{{ report.summary }}</p>
-        </Card>
-
-        <!-- Content -->
-        <Card title="詳細内容">
-          <div class="prose prose-sm max-w-none">
-            <div class="whitespace-pre-wrap text-secondary leading-relaxed">{{ report.body }}</div>
-          </div>
-        </Card>
-
-        <!-- Tags -->
-        <Card v-if="report.tags && report.tags.length > 0" title="タグ">
-          <div class="flex flex-wrap gap-2">
-            <Badge v-for="tag in report.tags" :key="tag" variant="outline" size="sm">
-              {{ tag }}
-            </Badge>
-          </div>
-        </Card>
-
-        <!-- Metadata -->
-        <Card title="詳細情報">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <!-- Created Date -->
             <div>
-              <span class="font-medium text-secondary">カテゴリ:</span>
-              <span class="ml-2 text-gray">{{ report.category }}</span>
+              <label class="block text-sm font-medium text-secondary mb-2">作成日時</label>
+              <div
+                class="w-full px-3 py-2 border border-gray-300 rounded-token-md bg-gray-50 text-secondary"
+              >
+                {{ formatDateInput(report.createdAt) }}
+              </div>
             </div>
+
+            <!-- Content -->
             <div>
-              <span class="font-medium text-secondary">作成日時:</span>
-              <span class="ml-2 text-gray">{{ formatDate(report.createdAt) }}</span>
+              <label class="block text-sm font-medium text-secondary mb-2">内容</label>
+              <div
+                class="w-full px-3 py-2 border border-gray-300 rounded-token-md bg-gray-50 text-secondary whitespace-pre-wrap min-h-[200px]"
+              >
+                {{ report.body }}
+              </div>
             </div>
-            <div v-if="report.updatedAt !== report.createdAt">
-              <span class="font-medium text-secondary">更新日時:</span>
-              <span class="ml-2 text-gray">{{ formatDate(report.updatedAt) }}</span>
-            </div>
-            <div v-if="report.pointsAwarded">
-              <span class="font-medium text-secondary">獲得ポイント:</span>
-              <span class="ml-2 text-gray">{{ report.pointsAwarded }} pt</span>
+
+            <!-- Improvements -->
+            <div v-if="report.improvements">
+              <label class="block text-sm font-medium text-secondary mb-2">改善案</label>
+              <div
+                class="w-full px-3 py-2 border border-gray-300 rounded-token-md bg-gray-50 text-secondary whitespace-pre-wrap min-h-[150px]"
+              >
+                {{ report.improvements }}
+              </div>
             </div>
           </div>
         </Card>
@@ -110,6 +106,7 @@
 import { ref, onMounted } from 'vue';
 import { format } from 'date-fns';
 import { ja } from 'date-fns/locale';
+import { getCategoryOptions } from '~/constants/categories';
 
 // Components
 import Card from '~/components/ui/Card.vue';
@@ -130,6 +127,7 @@ interface Report {
   author: string;
   userId: string;
   pointsAwarded?: number;
+  improvements?: string;
 }
 
 // Route params
@@ -165,6 +163,18 @@ const formatDate = (dateString: string) => {
   return format(new Date(dateString), 'yyyy年MM月dd日 HH:mm', { locale: ja });
 };
 
+const formatDateInput = (dateString: string) => {
+  return format(new Date(dateString), 'yyyy-MM-dd', { locale: ja });
+};
+
+const getCategoryDisplayName = (category: string): string => {
+  // カテゴリの表示名を取得
+  const categoryOptions = getCategoryOptions();
+  const option = categoryOptions.find((opt: any) => opt.value === category);
+  console.log('🔍 カテゴリ表示名取得:', { category, option, result: option?.label || category });
+  return option?.label || category;
+};
+
 const editReport = () => {
   // TODO: Navigate to edit page
   console.log('Edit report:', reportId);
@@ -191,6 +201,7 @@ const fetchReport = async () => {
       author: 'ユーザー', // 現在のAPIには author がないため固定値
       userId: response.userId,
       pointsAwarded: 0, // 現在のAPIには pointsAwarded がないため固定値
+      improvements: response.improvements, // 改善案フィールドを追加
     };
   } catch (err) {
     console.error('Failed to fetch report:', err);

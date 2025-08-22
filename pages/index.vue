@@ -1,105 +1,74 @@
 <template>
-  <div class="min-h-screen bg-background">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <!-- Header -->
-      <div class="mb-8">
-        <p class="text-ink/60">
-          {{ COPY.homeSubtitle }}
-        </p>
-      </div>
+  <div class="min-h-screen" :style="backgroundStyle">
+    <div class="max-w-7xl mx-auto px-6 py-8 space-y-8">
+      <!-- ヒーロー：マスコット + 説明文 -->
+      <MascotBanner
+        :today-count="todayCount"
+        :total-count="totalCount"
+        :remaining="orgRemaining"
+        :is-leveled-up="isLeveledUpToday"
+      />
 
-      <!-- Mascot Banner -->
-      <div class="mb-8">
-        <MascotBanner />
-      </div>
+      <!-- レベル状況：会社 / 個人 の2本バー -->
+      <LevelBar
+        type="dual"
+        :org-level="orgLevel.level"
+        :org-progress="orgProgress"
+        :org-remaining="orgRemaining"
+        :me-level="meLevel.level"
+        :me-progress="meProgress"
+        :me-remaining="meRemaining"
+      />
 
-      <!-- Main Content Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Left Column: Level Status -->
-        <div class="space-y-6">
-          <!-- Level Status -->
-          <Card title="レベル状況">
-            <div class="py-6">
-              <LevelBar
-                :level="userLevel"
-                :progress="levelProgress"
-                :reports-to-next="reportsToNextLevel"
-              />
-            </div>
-          </Card>
+      <!-- 最近の報告 -->
+      <section class="rounded-2xl border bg-white p-6 shadow-sm">
+        <div class="flex items-center justify-between">
+          <h2 class="text-base font-semibold">最近の報告</h2>
+          <NuxtLink to="/reports" class="text-sm text-emerald-700 hover:underline">
+            すべての報告を見る
+          </NuxtLink>
         </div>
 
-        <!-- Right Column: Recent Reports -->
-        <div class="space-y-6">
-          <!-- Recent Reports -->
-          <Card title="最近の報告">
-            <div v-if="loading" class="space-y-4">
-              <div v-for="i in 3" :key="i" class="grid grid-cols-[120px_1fr] gap-3">
-                <Skeleton variant="rectangular" width="100" height="24" />
-                <div class="space-y-2">
-                  <Skeleton variant="text" width="80%" />
-                  <Skeleton variant="text" width="60%" />
-                </div>
-              </div>
+        <div v-if="loading" class="mt-4 divide-y">
+          <div
+            v-for="i in 5"
+            :key="i"
+            class="py-3 grid grid-cols-[7rem,1fr,auto] items-start gap-3"
+          >
+            <Skeleton variant="rectangular" width="112" height="24" />
+            <div class="min-w-0 space-y-2">
+              <Skeleton variant="text" width="80%" />
+              <Skeleton variant="text" width="60%" />
             </div>
-
-            <div v-else-if="recentReports.length === 0" class="text-center py-8 text-ink/60">
-              まだ報告がありません
-            </div>
-
-            <div v-else>
-              <ul class="space-y-0">
-                <li
-                  v-for="report in recentReports"
-                  :key="report.id"
-                  class="grid grid-cols-[120px_1fr] gap-3 p-4 hover:bg-primary/10 cursor-pointer transition-colors"
-                  @click="$router.push(`/reports/${report.id}`)"
-                >
-                  <div class="truncate">
-                    <Badge :variant="getCategoryVariant(report.category)" class="text-xs">
-                      {{ report.category }}
-                    </Badge>
-                  </div>
-                  <div>
-                    <div class="font-medium line-clamp-1 text-sm">{{ report.title }}</div>
-                    <div class="text-sm opacity-80 line-clamp-2 mt-1">{{ report.summary }}</div>
-                  </div>
-                </li>
-              </ul>
-            </div>
-
-            <template #footer>
-              <div class="text-center">
-                <Button variant="ghost" @click="$router.push('/reports')">
-                  すべての報告を見る
-                </Button>
-              </div>
-            </template>
-          </Card>
-        </div>
-      </div>
-
-      <!-- Quick Actions -->
-      <div class="mt-8">
-        <Card title="クイックアクション">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button
-              variant="primary"
-              size="lg"
-              class="w-full"
-              @click="$router.push('/reports/new')"
-            >
-              新しい報告を作成
-            </Button>
-            <Button variant="secondary" size="md" class="w-full" @click="$router.push('/reports')">
-              報告一覧を見る
-            </Button>
-            <Button variant="ghost" size="md" class="w-full" @click="$router.push('/dashboard')">
-              ダッシュボード
-            </Button>
+            <Skeleton variant="text" width="60" />
           </div>
-        </Card>
-      </div>
+        </div>
+
+        <div v-else-if="recentReports.length === 0" class="mt-4 py-8 text-center text-gray-400">
+          まだ報告がありません。
+        </div>
+
+        <div v-else class="mt-4 divide-y">
+          <div
+            v-for="report in recentReports"
+            :key="report.id"
+            class="py-3 grid grid-cols-[7rem,1fr,auto] items-start gap-3 hover:bg-gray-50 cursor-pointer transition-colors"
+            @click="$router.push(`/reports/${report.id}`)"
+          >
+            <span
+              class="inline-flex w-28 shrink-0 justify-center rounded-full text-[11px] px-2 py-1 whitespace-nowrap overflow-hidden text-ellipsis"
+              :class="getCategoryColor(report.category)"
+            >
+              {{ report.category || '—' }}
+            </span>
+            <div class="min-w-0">
+              <div class="font-medium truncate">{{ report.title || '（無題）' }}</div>
+              <div class="text-xs text-gray-500 line-clamp-2">{{ report.summary || '' }}</div>
+            </div>
+            <div class="ml-auto text-xs text-gray-400">{{ formatDate(report.createdAt) }}</div>
+          </div>
+        </div>
+      </section>
     </div>
   </div>
 </template>
@@ -108,12 +77,9 @@
 import { ref, computed, onMounted } from 'vue';
 import { format } from 'date-fns';
 import { ja } from 'date-fns/locale';
-import { COPY } from '~/constants/copy';
+import { calculateLevel, checkTodayLevelUp } from '~/composables/useLevel';
 
 // Components
-import Card from '~/components/ui/Card.vue';
-import Button from '~/components/ui/Button.vue';
-import Badge from '~/components/ui/Badge.vue';
 import Skeleton from '~/components/ui/Skeleton.vue';
 import MascotBanner from '~/components/mascot/MascotBanner.vue';
 import LevelBar from '~/components/levels/LevelBar.vue';
@@ -124,96 +90,137 @@ interface Report {
   title: string;
   summary: string;
   category: string;
-  status: string;
   createdAt: string;
 }
 
 // Reactive data
 const loading = ref(true);
 const recentReports = ref<Report[]>([]);
+const todayCount = ref(0);
+const totalCount = ref(0);
+const meCount = ref(0);
 
-// Mock stats data
-const todayReports = ref(3);
-const weekReports = ref(12);
-const totalReports = ref(47);
-const improvementSuggestions = ref(89);
+// Level calculations
+const orgLevel = computed(() => calculateLevel(totalCount.value));
+const meLevel = computed(() => calculateLevel(meCount.value));
 
-// User level system (mock data)
-const userLevel = ref(4);
-const totalUserReports = ref(47);
+const orgProgress = computed(() => orgLevel.value.progress);
+const orgRemaining = computed(() => orgLevel.value.remaining);
+const meProgress = computed(() => meLevel.value.progress);
+const meRemaining = computed(() => meLevel.value.remaining);
 
-const levelTitle = computed(() => {
-  const titles = ['新人', '初級者', '中級者', '上級者', 'エキスパート', 'マスター'];
-  return titles[Math.min(userLevel.value - 1, titles.length - 1)] || 'マスター';
+// Level up detection
+const isLeveledUpToday = computed(() => {
+  const orgLeveledUp = checkTodayLevelUp('level.org', totalCount.value);
+  const meLeveledUp = checkTodayLevelUp('level.me', meCount.value);
+  return orgLeveledUp || meLeveledUp;
 });
 
-const levelProgress = computed(() => {
-  const reportsForCurrentLevel = (userLevel.value - 1) * 10;
-  const reportsForNextLevel = userLevel.value * 10;
-  const currentProgress = totalUserReports.value - reportsForCurrentLevel;
-  const levelRange = reportsForNextLevel - reportsForCurrentLevel;
-  return Math.min((currentProgress / levelRange) * 100, 100);
-});
-
-const reportsToNextLevel = computed(() => {
-  const reportsForNextLevel = userLevel.value * 10;
-  return Math.max(reportsForNextLevel - totalUserReports.value, 0);
-});
+// Background style
+const backgroundStyle = computed(() => ({
+  background: 'radial-gradient(1200px 600px at 50% -20%, #ecfdf5 0%, #f6fff9 40%, #ffffff 72%)',
+}));
 
 // Methods
-const getCategoryVariant = (
-  category: string,
-): 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'outline' => {
-  const variants: Record<
-    string,
-    'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'outline'
-  > = {
-    '情報漏洩・誤送信': 'error',
-    システム障害: 'warning',
-    作業ミス: 'primary',
-    コミュニケーション: 'secondary',
-    その他: 'default',
-  };
-  return variants[category] || 'default';
+const getCategoryColor = (category: string) => {
+  const colorMap = [
+    { bg: 'bg-emerald-50', text: 'text-emerald-700' },
+    { bg: 'bg-amber-50', text: 'text-amber-700' },
+    { bg: 'bg-rose-50', text: 'text-rose-700' },
+    { bg: 'bg-sky-50', text: 'text-sky-700' },
+    { bg: 'bg-lime-50', text: 'text-lime-700' },
+    { bg: 'bg-violet-50', text: 'text-violet-700' },
+  ];
+
+  // 簡易ハッシュで安定色
+  let hash = 0;
+  const str = String(category || '');
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash * 31 + str.charCodeAt(i)) >>> 0;
+  }
+  const color = colorMap[hash % colorMap.length] || colorMap[0];
+  return `${color.bg} ${color.text}`;
 };
 
 const formatDate = (dateString: string) => {
-  return format(new Date(dateString), 'MM/dd HH:mm', { locale: ja });
+  if (!dateString) return '';
+  try {
+    return format(new Date(dateString), 'MM/dd', { locale: ja });
+  } catch {
+    return '';
+  }
 };
 
-const fetchRecentReports = async () => {
+const fetchData = async () => {
   try {
     loading.value = true;
-    // Mock API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    // Mock data
-    recentReports.value = [
-      {
-        id: '1',
-        title: '機密資料の誤送信インシデント',
-        summary: '重要な会議資料を間違った取引先に送信してしまいました。',
-        category: '情報漏洩・誤送信',
-        status: '完了',
-        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: '2',
-        title: 'データベース接続エラー',
-        summary: '朝の業務開始時にデータベースに接続できない問題が発生しました。',
-        category: 'システム障害',
-        status: '実施中',
-        createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: '3',
-        title: '顧客情報の入力ミス',
-        summary: '顧客の住所を間違って入力し、配送に遅延が生じました。',
-        category: '作業ミス',
-        status: '検討中',
-        createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-      },
-    ];
+    const api = useApi();
+
+    console.log('🔍 ホーム画面データ取得開始');
+
+    // 並列でデータを取得
+    const [allStatsRes, todayStatsRes, recentRes] = await Promise.all([
+      // 全体の統計
+      api.stats.categories({ scope: 'all' }),
+      // 今日の統計（scopeの型エラーを回避するため、直接APIコールを使用）
+      api.apiCall('/stats/categories', {
+        method: 'GET',
+        query: { scope: 'today', tz: 'Asia/Tokyo' },
+      }),
+      // 最近の報告5件（limitパラメータを削除し、後でsliceで制限）
+      api.reports.list(),
+    ]);
+
+    console.log('📊 API取得結果:');
+    console.log('- 全体統計:', allStatsRes);
+    console.log('- 今日統計:', todayStatsRes);
+    console.log('- 最近の報告:', recentRes);
+
+    // データの設定
+    totalCount.value = allStatsRes.totalReports || 0;
+    todayCount.value = (todayStatsRes as any).totalReports || 0;
+
+    // 個人の報告数を取得（最近の報告から推定、または固定値を使用）
+    // TODO: 個人専用のAPIエンドポイントが実装されたら修正
+    meCount.value = Math.floor(totalCount.value * 0.1) || 5; // 暫定的に全体の10%または5件
+
+    console.log('📈 設定された値:');
+    console.log(`- 総報告数: ${totalCount.value}`);
+    console.log(`- 今日の報告数: ${todayCount.value}`);
+    console.log(`- 個人報告数: ${meCount.value} (暫定値)`);
+
+    // レベル計算結果をログ出力
+    const orgLevelInfo = calculateLevel(totalCount.value);
+    const meLevelInfo = calculateLevel(meCount.value);
+    console.log('🎯 レベル計算結果:');
+    console.log(
+      `- 会社レベル: Lv${orgLevelInfo.level} ${orgLevelInfo.name} (残り${orgLevelInfo.remaining}件)`,
+    );
+    console.log(
+      `- 個人レベル: Lv${meLevelInfo.level} ${meLevelInfo.name} (残り${meLevelInfo.remaining}件)`,
+    );
+
+    // 最近の報告の変換（5件に制限）
+    const reports = recentRes.items || [];
+    recentReports.value = reports.slice(0, 5).map((report: any) => ({
+      id: report.reportId || report.id,
+      title: report.title || report.summary || '（無題）',
+      summary: report.summary || report.body || '',
+      category: report.category || '—',
+      createdAt: report.createdAt || '',
+    }));
+
+    console.log(`📝 最近の報告: ${recentReports.value.length}件取得`);
+  } catch (error) {
+    console.error('❌ データ取得エラー:', error);
+    console.log('🔄 フォールバックデータを使用します');
+
+    // API取得に失敗した場合は空のデータを設定（モックデータは使用しない）
+    totalCount.value = 0;
+    todayCount.value = 0;
+    meCount.value = 0;
+    recentReports.value = [];
   } finally {
     loading.value = false;
   }
@@ -221,7 +228,7 @@ const fetchRecentReports = async () => {
 
 // Lifecycle
 onMounted(() => {
-  fetchRecentReports();
+  fetchData();
 });
 
 // Meta

@@ -123,6 +123,35 @@ export const useApi = () => {
     },
   };
 
+  // 統計関連のAPI
+  const stats = {
+    categories: (
+      params: {
+        scope?: 'all' | 'month' | 'company' | 'user';
+        topN?: number;
+        tz?: string;
+      } = {},
+    ) => {
+      return apiCall<{
+        ok: boolean;
+        scope: string;
+        from?: string;
+        to?: string;
+        totalReports: number;
+        byCategory: Array<{
+          code: string;
+          name: string;
+          count: number;
+        }>;
+        advice: string;
+        updatedAt: string;
+      }>('/stats/categories', {
+        method: 'GET',
+        query: params,
+      });
+    },
+  };
+
   // AI生成関連のAPI
   const ai = {
     // AI生成（連続送信防止付き、自動リトライ機能付き）
@@ -271,6 +300,7 @@ export const useApi = () => {
     apiCall,
     reports,
     dashboard,
+    stats,
     ai,
     health,
   };
