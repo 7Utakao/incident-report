@@ -36,9 +36,7 @@ export const useApi = () => {
         const token = await getIdToken();
         if (token) {
           headers.Authorization = `Bearer ${token}`;
-          console.log('JWT token added to request headers');
         } else {
-          console.error('認証トークンが取得できませんでした。ログインが必要です。');
           throw new Error('認証が必要です。ログインしてください。');
         }
       } catch (authError) {

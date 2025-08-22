@@ -1,78 +1,65 @@
 import type { APIGatewayProxyEventV2 } from 'aws-lambda';
+import { jwtVerify, createRemoteJWKSet } from 'jose';
 
-export function getUserId(event: APIGatewayProxyEventV2): string | null {
+// Cognito JWKSエンドポイントのキャッシュ
+let jwksCache: any = null;
+let jwksCacheExpiry = 0;
+
+export async function getUserId(event: APIGatewayProxyEventV2): Promise<string | null> {
   try {
-    console.log('🔍 getUserId 開始');
-    console.log('Event headers:', JSON.stringify(event.headers, null, 2));
-    console.log('Request context:', JSON.stringify(event.requestContext, null, 2));
-
     // Development bypass for specific endpoints
     const devAllow = process.env.AUTH_DEV_ALLOW === 'true';
     const path = event.requestContext.http.path;
-    const publicPaths = ['/health', '/ai/generate'];
-
-    console.log('Development bypass:', devAllow, 'Path:', path);
+    const publicPaths = ['/health'];
 
     if (devAllow && publicPaths.includes(path)) {
-      console.log(`Development bypass enabled for path: ${path}`);
       return 'dev-user-id';
     }
 
-    // For Lambda Function URL, we need to extract JWT from Authorization header
+    // Authorization headerからJWTトークンを取得
     const authHeader = event.headers?.authorization || event.headers?.Authorization;
-    console.log('Authorization header:', authHeader ? `${authHeader.substring(0, 20)}...` : 'なし');
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.log('❌ No valid Authorization header found');
       return null;
     }
 
-    // For development/testing purposes, we'll use a mock user ID
-    // In production, you would decode and validate the JWT token here
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-    console.log('Extracted token:', `${token.substring(0, 50)}...`);
 
-    // Mock validation - in production, use a proper JWT library
-    if (token === 'test-token') {
-      console.log('✅ Test token detected');
-      return 'test-user-id';
+    // 環境変数から設定を取得
+    const userPoolId = process.env.USER_POOL_ID;
+    const userPoolClientId = process.env.USER_POOL_CLIENT_ID;
+    const region = process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || 'ap-northeast-1';
+
+    // 必要な環境変数が設定されているかチェック
+    if (!userPoolId || !userPoolClientId) {
+      console.error('Missing required environment variables: USER_POOL_ID or USER_POOL_CLIENT_ID');
+      return null;
     }
 
-    // 一時的に実際のJWTトークンも受け入れる（開発用）
-    if (token && token.length > 50) {
-      console.log('✅ JWT token detected, using temporary bypass');
-      // JWTトークンの構造を確認
-      try {
-        const parts = token.split('.');
-        if (parts.length === 3) {
-          const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
-          console.log('JWT payload:', JSON.stringify(payload, null, 2));
+    const jwksUrl = `https://cognito-idp.${region}.amazonaws.com/${userPoolId}/.well-known/jwks.json`;
+    const expectedIssuer = `https://cognito-idp.${region}.amazonaws.com/${userPoolId}`;
 
-          // Cognitoのsubクレームを使用
-          if (payload.sub) {
-            console.log('✅ Using Cognito sub as user ID:', payload.sub);
-            return payload.sub;
-          }
-        }
-      } catch (jwtError) {
-        console.error('JWT parsing error:', jwtError);
+    // JWKSを取得（キャッシュ機能付き）
+    const now = Date.now();
+    if (!jwksCache || now > jwksCacheExpiry) {
+      try {
+        jwksCache = createRemoteJWKSet(new URL(jwksUrl));
+        jwksCacheExpiry = now + 3600000; // 1時間キャッシュ
+      } catch (jwksError) {
+        console.error('JWKS fetch error:', jwksError);
+        throw jwksError;
       }
     }
 
-    // For API Gateway with JWT authorizer (this property may not exist in Lambda Function URL)
-    const requestContext = event.requestContext as any;
-    const claims = requestContext.authorizer?.jwt?.claims;
-    console.log('Request context claims:', claims);
+    // JWTトークンを検証
+    const { payload } = await jwtVerify(token, jwksCache, {
+      issuer: expectedIssuer,
+      audience: userPoolClientId,
+    });
 
-    if (claims?.sub) {
-      console.log('✅ Using request context sub:', claims.sub);
-      return claims.sub as string;
-    }
-
-    console.log('❌ Invalid or missing JWT token');
-    return null;
-  } catch (error) {
-    console.error('❌ Failed to extract user ID from JWT:', error);
+    return payload.sub as string;
+  } catch (error: any) {
+    console.error('JWT verification failed:', error.message);
     return null;
   }
 }

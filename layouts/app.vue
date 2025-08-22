@@ -214,9 +214,6 @@ const route = useRoute();
 const sidebarOpen = ref(false);
 const mobileMenuOpen = ref(false);
 
-console.log('layouts/app.vue - 初期認証状態:', isAuthenticated.value);
-console.log('layouts/app.vue - 初期ユーザー:', user.value);
-
 const handleSignOut = async () => {
   try {
     await logout();
@@ -225,32 +222,10 @@ const handleSignOut = async () => {
   }
 };
 
-// 認証状態の変化を監視
-watch(
-  isAuthenticated,
-  (newValue, oldValue) => {
-    console.log('layouts/app.vue - 認証状態変化:', { oldValue, newValue });
-  },
-  { immediate: true },
-);
-
-watch(
-  user,
-  (newValue, oldValue) => {
-    console.log('layouts/app.vue - ユーザー情報変化:', { oldValue, newValue });
-  },
-  { immediate: true },
-);
-
 // 初期化時に認証状態をチェック
 onMounted(async () => {
-  console.log('layouts/app.vue - onMounted実行');
   if (process.client) {
-    console.log('layouts/app.vue - 認証状態チェック開始');
-    const result = await checkAuthStatus();
-    console.log('layouts/app.vue - 認証状態チェック結果:', result);
-    console.log('layouts/app.vue - チェック後の認証状態:', isAuthenticated.value);
-    console.log('layouts/app.vue - チェック後のユーザー:', user.value);
+    await checkAuthStatus();
   }
 });
 </script>

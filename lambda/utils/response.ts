@@ -1,13 +1,8 @@
 import type { APIGatewayProxyResultV2 } from 'aws-lambda';
 
-// CORS headers for all responses
-const CORS_HEADERS = {
+// Basic headers for all responses (CORS is handled by Lambda Function URL)
+const BASIC_HEADERS = {
   'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': '*', // 本番環境では具体的なドメインを指定
-  'Access-Control-Allow-Credentials': 'true',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
-  'Access-Control-Max-Age': '86400', // 24 hours
 };
 
 export function createResponse(
@@ -18,7 +13,7 @@ export function createResponse(
   return {
     statusCode,
     headers: {
-      ...CORS_HEADERS,
+      ...BASIC_HEADERS,
       ...additionalHeaders,
     },
     body: JSON.stringify(body),
@@ -34,11 +29,11 @@ export function createErrorResponse(
   return createResponse(statusCode, { code, message });
 }
 
-// Handle OPTIONS preflight requests
+// Handle OPTIONS preflight requests (CORS is handled by Lambda Function URL)
 export function createOptionsResponse(): APIGatewayProxyResultV2 {
   return {
     statusCode: 200,
-    headers: CORS_HEADERS,
+    headers: BASIC_HEADERS,
     body: '',
   };
 }

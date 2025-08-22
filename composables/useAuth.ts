@@ -121,6 +121,21 @@ export const useAuth = () => {
 
   // 認証状態をチェック
   const checkAuthStatus = async () => {
+    // 既に認証済みで、ユーザー情報もある場合はスキップ
+    if (globalIsAuthenticated.value && globalUser.value) {
+      return true;
+    }
+
+    // 既にローディング中の場合は待機
+    if (globalLoading.value) {
+      let waitCount = 0;
+      while (globalLoading.value && waitCount < 50) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        waitCount++;
+      }
+      return globalIsAuthenticated.value;
+    }
+
     try {
       globalLoading.value = true;
       const currentUser = await getCurrentUser();
@@ -141,6 +156,7 @@ export const useAuth = () => {
         globalIsAuthenticated.value = false;
         return false;
       }
+
       console.error('認証状態チェックエラー:', err);
       globalUser.value = null;
       globalIsAuthenticated.value = false;

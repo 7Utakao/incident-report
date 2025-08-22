@@ -6,15 +6,6 @@
         <div>
           <h1 class="text-3xl font-bold text-secondary">{{ COPY.listTitle }}</h1>
           <p class="mt-2 text-gray">{{ COPY.listSubtitle }}</p>
-          <!-- デバッグ情報 -->
-          <div class="mt-2 text-xs text-gray-500 space-y-1">
-            <div>
-              認証状態: {{ debugInfo.isAuthenticated ? '✅ ログイン済み' : '❌ 未ログイン' }}
-            </div>
-            <div>トークン: {{ debugInfo.hasToken ? '✅ あり' : '❌ なし' }}</div>
-            <div>最終取得: {{ debugInfo.lastFetch || '未取得' }}</div>
-            <div>エラー: {{ debugInfo.lastError || 'なし' }}</div>
-          </div>
         </div>
         <div class="flex space-x-2">
           <Button variant="secondary" @click="manualRefresh" :loading="loading">
@@ -318,20 +309,30 @@ const manualRefresh = async () => {
 const fetchReports = async () => {
   try {
     loading.value = true;
-    console.log('🔍 レポート取得開始');
 
     // デバッグ情報をリセット
     debugInfo.value.lastError = '';
     debugInfo.value.lastFetch = new Date().toLocaleString('ja-JP');
 
     // 認証状態の確認
-    const { isAuthenticated, getIdToken } = useAuth();
-    console.log('認証状態:', isAuthenticated.value);
-    debugInfo.value.isAuthenticated = isAuthenticated.value;
+    const { isAuthenticated, getIdToken, checkAuthStatus } = useAuth();
+
+    // 認証状態を再確認
+    const authStatus = await checkAuthStatus();
+    debugInfo.value.isAuthenticated = authStatus;
+
+    if (!authStatus) {
+      await navigateTo('/login');
+      return;
+    }
 
     const token = await getIdToken();
-    console.log('トークン取得結果:', token ? 'あり' : 'なし');
     debugInfo.value.hasToken = !!token;
+
+    if (!token) {
+      await navigateTo('/login');
+      return;
+    }
 
     const { reports: api } = useApi();
 
@@ -341,15 +342,11 @@ const fetchReports = async () => {
       from: filters.value.from,
       to: filters.value.to,
     };
-    console.log('クエリパラメータ:', queryParams);
 
     const response = await api.list(queryParams);
-    console.log('✅ API レスポンス:', response);
-    console.log('取得したアイテム数:', response.items?.length || 0);
 
     // APIレスポンスをUIで使用する形式に変換
     reports.value = response.items.map((item: any) => {
-      console.log('変換中のアイテム:', item);
       return {
         id: item.reportId,
         title: item.title || '無題',
@@ -362,16 +359,8 @@ const fetchReports = async () => {
         updatedAt: item.createdAt, // 現在のAPIには updatedAt がないため createdAt を使用
       };
     });
-
-    console.log('✅ 変換後のレポート数:', reports.value.length);
   } catch (error: any) {
-    console.error('❌ レポート取得エラー:', error);
-    console.error('エラーの詳細:', {
-      message: error.message,
-      status: error.status,
-      statusCode: error.statusCode,
-      stack: error.stack,
-    });
+    console.error('レポート取得エラー:', error);
 
     // デバッグ情報にエラーを記録
     debugInfo.value.lastError = error.message || 'Unknown error';
@@ -379,11 +368,17 @@ const fetchReports = async () => {
     // エラー時は空配列を設定
     reports.value = [];
 
-    // ユーザーにエラーを表示
-    if (error.message?.includes('認証')) {
-      alert('認証エラーが発生しました。再ログインしてください。');
-    } else {
-      alert(`データの取得に失敗しました: ${error.message}`);
+    // 認証関連エラーの詳細な判定
+    const isAuthError =
+      error.message?.includes('認証') ||
+      error.message?.includes('JWT') ||
+      error.message?.includes('Valid JWT token required') ||
+      error.message?.includes('認証が必要です') ||
+      error.status === 401 ||
+      error.statusCode === 401;
+
+    if (isAuthError) {
+      await navigateTo('/login');
     }
   } finally {
     loading.value = false;

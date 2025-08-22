@@ -12,7 +12,7 @@ export async function handleAiGenerate(
   event: APIGatewayProxyEventV2,
 ): Promise<APIGatewayProxyResultV2> {
   try {
-    const userId = getUserId(event);
+    const userId = await getUserId(event);
     if (!userId) {
       return createErrorResponse(401, 'Unauthorized', 'Valid JWT token required');
     }

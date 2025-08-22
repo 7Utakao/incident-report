@@ -19,7 +19,7 @@ export async function handleCreateReport(
     console.log('🔍 handleCreateReport 開始');
     console.log('Event body:', event.body);
 
-    const userId = getUserId(event);
+    const userId = await getUserId(event);
     console.log('取得したユーザーID:', userId);
     if (!userId) {
       return createErrorResponse(401, 'Unauthorized', 'Valid JWT token required');
@@ -59,43 +59,16 @@ export async function handleGetReports(
   event: APIGatewayProxyEventV2,
 ): Promise<APIGatewayProxyResultV2> {
   try {
-    console.log('🔍 handleGetReports 開始');
-    console.log('Event:', JSON.stringify(event, null, 2));
-
-    const userId = getUserId(event);
-    console.log('取得したユーザーID:', userId);
+    const userId = await getUserId(event);
     if (!userId) {
       return createErrorResponse(401, 'Unauthorized', 'Valid JWT token required');
     }
 
     const queryParams = QueryParamsSchema.parse(event.queryStringParameters || {});
     const { category, from, to, nextToken, q } = queryParams;
-    console.log('クエリパラメータ:', { category, from, to, nextToken, q });
 
     const result = await queryReports({ category, from, to, nextToken, q });
-    console.log('DynamoDB クエリ結果:', {
-      itemCount: result.items.length,
-      hasLastEvaluatedKey: !!result.lastEvaluatedKey,
-      items: result.items.map((item) => ({
-        ReportId: item.ReportId,
-        Title: item.Title,
-        Category: item.Category,
-        CreatedAt: item.CreatedAt,
-        UserId: item.UserId,
-      })),
-    });
-
     const apiItems = result.items.map(dynamoToApi);
-    console.log('API形式に変換後:', {
-      itemCount: apiItems.length,
-      items: apiItems.map((item) => ({
-        reportId: item.reportId,
-        title: item.title,
-        category: item.category,
-        createdAt: item.createdAt,
-        userId: item.userId,
-      })),
-    });
 
     const response: any = {
       items: apiItems,
@@ -104,11 +77,6 @@ export async function handleGetReports(
     if (result.lastEvaluatedKey) {
       response.nextToken = encodeNextToken(result.lastEvaluatedKey);
     }
-
-    console.log('✅ レスポンス準備完了:', {
-      itemCount: response.items.length,
-      hasNextToken: !!response.nextToken,
-    });
 
     return createResponse(200, response);
   } catch (error) {
@@ -129,7 +97,7 @@ export async function handleGetReport(
   event: APIGatewayProxyEventV2,
 ): Promise<APIGatewayProxyResultV2> {
   try {
-    const userId = getUserId(event);
+    const userId = await getUserId(event);
     if (!userId) {
       return createErrorResponse(401, 'Unauthorized', 'Valid JWT token required');
     }
