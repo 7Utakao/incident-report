@@ -16,29 +16,41 @@ export async function handleCreateReport(
   event: APIGatewayProxyEventV2,
 ): Promise<APIGatewayProxyResultV2> {
   try {
+    console.log('🔍 handleCreateReport 開始');
+    console.log('Event body:', event.body);
+
     const userId = getUserId(event);
+    console.log('取得したユーザーID:', userId);
     if (!userId) {
       return createErrorResponse(401, 'Unauthorized', 'Valid JWT token required');
     }
 
     const body = JSON.parse(event.body || '{}');
+    console.log('パースしたボディ:', body);
+
     const validatedData = CreateReportSchema.parse(body);
+    console.log('バリデーション後のデータ:', validatedData);
 
     const reportId = uuidv4();
+    console.log('生成したレポートID:', reportId);
+
     const reportItem = apiToDynamo(validatedData, reportId, userId);
+    console.log('DynamoDB保存用データ:', reportItem);
 
     await createReport(reportItem);
+    console.log('✅ DynamoDBへの保存完了');
 
     return createResponse(201, { reportId });
   } catch (error) {
     if (error instanceof z.ZodError) {
+      console.error('❌ バリデーションエラー:', error.issues);
       return createErrorResponse(
         400,
         'BadRequest',
         `Validation error: ${error.issues.map((e: any) => e.message).join(', ')}`,
       );
     }
-    console.error('Error creating report:', error);
+    console.error('❌ レポート作成エラー:', error);
     return createErrorResponse(500, 'InternalError', 'Failed to create report');
   }
 }
@@ -47,16 +59,43 @@ export async function handleGetReports(
   event: APIGatewayProxyEventV2,
 ): Promise<APIGatewayProxyResultV2> {
   try {
+    console.log('🔍 handleGetReports 開始');
+    console.log('Event:', JSON.stringify(event, null, 2));
+
     const userId = getUserId(event);
+    console.log('取得したユーザーID:', userId);
     if (!userId) {
       return createErrorResponse(401, 'Unauthorized', 'Valid JWT token required');
     }
 
     const queryParams = QueryParamsSchema.parse(event.queryStringParameters || {});
     const { category, from, to, nextToken, q } = queryParams;
+    console.log('クエリパラメータ:', { category, from, to, nextToken, q });
 
     const result = await queryReports({ category, from, to, nextToken, q });
+    console.log('DynamoDB クエリ結果:', {
+      itemCount: result.items.length,
+      hasLastEvaluatedKey: !!result.lastEvaluatedKey,
+      items: result.items.map((item) => ({
+        ReportId: item.ReportId,
+        Title: item.Title,
+        Category: item.Category,
+        CreatedAt: item.CreatedAt,
+        UserId: item.UserId,
+      })),
+    });
+
     const apiItems = result.items.map(dynamoToApi);
+    console.log('API形式に変換後:', {
+      itemCount: apiItems.length,
+      items: apiItems.map((item) => ({
+        reportId: item.reportId,
+        title: item.title,
+        category: item.category,
+        createdAt: item.createdAt,
+        userId: item.userId,
+      })),
+    });
 
     const response: any = {
       items: apiItems,
@@ -66,16 +105,22 @@ export async function handleGetReports(
       response.nextToken = encodeNextToken(result.lastEvaluatedKey);
     }
 
+    console.log('✅ レスポンス準備完了:', {
+      itemCount: response.items.length,
+      hasNextToken: !!response.nextToken,
+    });
+
     return createResponse(200, response);
   } catch (error) {
     if (error instanceof z.ZodError) {
+      console.error('❌ バリデーションエラー:', error.issues);
       return createErrorResponse(
         400,
         'BadRequest',
         `Validation error: ${error.issues.map((e: any) => e.message).join(', ')}`,
       );
     }
-    console.error('Error getting reports:', error);
+    console.error('❌ レポート取得エラー:', error);
     return createErrorResponse(500, 'InternalError', 'Failed to get reports');
   }
 }

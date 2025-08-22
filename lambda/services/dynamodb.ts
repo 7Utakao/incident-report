@@ -49,12 +49,22 @@ export function apiToDynamo(
 
 // DynamoDB operations
 export async function createReport(reportItem: ReportItem): Promise<void> {
+  console.log('🔍 createReport 開始');
+  console.log('保存するアイテム:', reportItem);
+  console.log('テーブル名:', DDB_REPORTS);
+
   const command = new PutCommand({
     TableName: DDB_REPORTS,
     Item: reportItem,
   });
 
-  await docClient.send(command);
+  console.log('実行するPutCommand:', {
+    tableName: command.input.TableName,
+    item: command.input.Item,
+  });
+
+  const result = await docClient.send(command);
+  console.log('✅ PutCommand実行結果:', result);
 }
 
 export async function getReport(reportId: string): Promise<ReportItem | null> {
@@ -76,6 +86,11 @@ export async function queryReports(params: {
   nextToken?: string;
   q?: string;
 }): Promise<{ items: ReportItem[]; lastEvaluatedKey?: any }> {
+  console.log('🔍 queryReports 開始');
+  console.log('パラメータ:', params);
+  console.log('テーブル名:', DDB_REPORTS);
+  console.log('リージョン:', AWS_REGION);
+
   const { category, from, to, nextToken, q } = params;
 
   let command;
@@ -84,7 +99,9 @@ export async function queryReports(params: {
   if (nextToken) {
     try {
       exclusiveStartKey = JSON.parse(Buffer.from(nextToken, 'base64').toString());
+      console.log('NextToken デコード結果:', exclusiveStartKey);
     } catch (error) {
+      console.error('❌ NextToken デコードエラー:', error);
       throw new Error('Invalid nextToken');
     }
   }
@@ -140,7 +157,41 @@ export async function queryReports(params: {
     });
   }
 
+  if (command instanceof QueryCommand) {
+    console.log('実行するコマンド (Query):', {
+      type: 'QueryCommand',
+      tableName: command.input.TableName,
+      indexName: command.input.IndexName,
+      keyConditionExpression: command.input.KeyConditionExpression,
+      expressionAttributeValues: command.input.ExpressionAttributeValues,
+      limit: command.input.Limit,
+      scanIndexForward: command.input.ScanIndexForward,
+    });
+  } else {
+    console.log('実行するコマンド (Scan):', {
+      type: 'ScanCommand',
+      tableName: command.input.TableName,
+      filterExpression: command.input.FilterExpression,
+      expressionAttributeValues: command.input.ExpressionAttributeValues,
+      limit: command.input.Limit,
+    });
+  }
+
   const result = await docClient.send(command);
+  console.log('DynamoDB実行結果:', {
+    itemCount: result.Items?.length || 0,
+    scannedCount: result.ScannedCount,
+    consumedCapacity: result.ConsumedCapacity,
+    lastEvaluatedKey: result.LastEvaluatedKey,
+    items:
+      result.Items?.map((item) => ({
+        ReportId: item.ReportId,
+        Title: item.Title,
+        Category: item.Category,
+        CreatedAt: item.CreatedAt,
+      })) || [],
+  });
+
   return {
     items: (result.Items || []) as ReportItem[],
     lastEvaluatedKey: result.LastEvaluatedKey,

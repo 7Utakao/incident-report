@@ -6,8 +6,24 @@
         <div>
           <h1 class="text-3xl font-bold text-secondary">{{ COPY.listTitle }}</h1>
           <p class="mt-2 text-gray">{{ COPY.listSubtitle }}</p>
+          <!-- デバッグ情報 -->
+          <div class="mt-2 text-xs text-gray-500 space-y-1">
+            <div>
+              認証状態: {{ debugInfo.isAuthenticated ? '✅ ログイン済み' : '❌ 未ログイン' }}
+            </div>
+            <div>トークン: {{ debugInfo.hasToken ? '✅ あり' : '❌ なし' }}</div>
+            <div>最終取得: {{ debugInfo.lastFetch || '未取得' }}</div>
+            <div>エラー: {{ debugInfo.lastError || 'なし' }}</div>
+          </div>
         </div>
-        <Button variant="primary" @click="$router.push('/reports/new')"> 新しい報告を作成 </Button>
+        <div class="flex space-x-2">
+          <Button variant="secondary" @click="manualRefresh" :loading="loading">
+            {{ loading ? '取得中...' : '手動更新' }}
+          </Button>
+          <Button variant="primary" @click="$router.push('/reports/new')">
+            新しい報告を作成
+          </Button>
+        </div>
       </div>
 
       <!-- Filters -->
@@ -165,6 +181,14 @@ const filters = ref<Filters>({
   to: '',
 });
 
+// デバッグ情報
+const debugInfo = ref({
+  isAuthenticated: false,
+  hasToken: false,
+  lastFetch: '',
+  lastError: '',
+});
+
 // カテゴリオプション
 import {
   getCategoryOptions,
@@ -286,34 +310,81 @@ const exportReports = () => {
   console.log('Export reports');
 };
 
+const manualRefresh = async () => {
+  console.log('🔄 手動更新が実行されました');
+  await fetchReports();
+};
+
 const fetchReports = async () => {
   try {
     loading.value = true;
+    console.log('🔍 レポート取得開始');
+
+    // デバッグ情報をリセット
+    debugInfo.value.lastError = '';
+    debugInfo.value.lastFetch = new Date().toLocaleString('ja-JP');
+
+    // 認証状態の確認
+    const { isAuthenticated, getIdToken } = useAuth();
+    console.log('認証状態:', isAuthenticated.value);
+    debugInfo.value.isAuthenticated = isAuthenticated.value;
+
+    const token = await getIdToken();
+    console.log('トークン取得結果:', token ? 'あり' : 'なし');
+    debugInfo.value.hasToken = !!token;
+
     const { reports: api } = useApi();
 
-    const response = await api.list({
+    const queryParams = {
       q: filters.value.q,
       category: filters.value.category,
       from: filters.value.from,
       to: filters.value.to,
-    });
+    };
+    console.log('クエリパラメータ:', queryParams);
+
+    const response = await api.list(queryParams);
+    console.log('✅ API レスポンス:', response);
+    console.log('取得したアイテム数:', response.items?.length || 0);
 
     // APIレスポンスをUIで使用する形式に変換
-    reports.value = response.items.map((item: any) => ({
-      id: item.reportId,
-      title: item.title || '無題',
-      summary: item.summary || item.body?.substring(0, 100) + '...' || '',
-      category: item.category,
-      status: '完了', // 現在のAPIには status がないため固定値
-      author: 'ユーザー', // 現在のAPIには author がないため固定値
-      userId: item.userId,
-      createdAt: item.createdAt,
-      updatedAt: item.createdAt, // 現在のAPIには updatedAt がないため createdAt を使用
-    }));
-  } catch (error) {
-    console.error('Failed to fetch reports:', error);
+    reports.value = response.items.map((item: any) => {
+      console.log('変換中のアイテム:', item);
+      return {
+        id: item.reportId,
+        title: item.title || '無題',
+        summary: item.summary || item.body?.substring(0, 100) + '...' || '',
+        category: item.category,
+        status: '完了', // 現在のAPIには status がないため固定値
+        author: 'ユーザー', // 現在のAPIには author がないため固定値
+        userId: item.userId,
+        createdAt: item.createdAt,
+        updatedAt: item.createdAt, // 現在のAPIには updatedAt がないため createdAt を使用
+      };
+    });
+
+    console.log('✅ 変換後のレポート数:', reports.value.length);
+  } catch (error: any) {
+    console.error('❌ レポート取得エラー:', error);
+    console.error('エラーの詳細:', {
+      message: error.message,
+      status: error.status,
+      statusCode: error.statusCode,
+      stack: error.stack,
+    });
+
+    // デバッグ情報にエラーを記録
+    debugInfo.value.lastError = error.message || 'Unknown error';
+
     // エラー時は空配列を設定
     reports.value = [];
+
+    // ユーザーにエラーを表示
+    if (error.message?.includes('認証')) {
+      alert('認証エラーが発生しました。再ログインしてください。');
+    } else {
+      alert(`データの取得に失敗しました: ${error.message}`);
+    }
   } finally {
     loading.value = false;
   }
