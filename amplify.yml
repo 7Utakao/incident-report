@@ -3,16 +3,8 @@ backend:
   phases:
     build:
       commands:
-        # Lambda関数の依存関係インストール（devDependenciesも含める）
-        - cd lambda
-        - npm ci
-        - cd ..
-
-        # Lambda関数のZipファイル作成（Linux環境用）
-        - cd lambda
-        - npm run build
-        - zip -j ../incident-report-api-dev.zip index.js
-        - cd ..
+        # Lambda関数の依存関係インストールとビルド
+        - cd lambda && npm ci && npm run build && zip -j ../incident-report-api-dev.zip index.js
 
         # AWS CLIでLambda関数を更新（環境変数で制御）
         - |

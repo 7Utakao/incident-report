@@ -20404,7 +20404,6 @@ ${categoryExamples}
 }
 async function generateAIReport(content) {
   const provider = process.env.AI_PROVIDER || "bedrock";
-  console.log(`Using AI provider: ${provider}`);
   switch (provider) {
     case "bedrock":
       return await generateWithBedrock(content);
@@ -20615,7 +20614,6 @@ async function preprocessText(text, options = {}) {
       processedLength: originalLength
     };
   }
-  console.log(`Processing long text: ${originalLength} characters`);
   const chunks = splitIntoChunks(text, config.chunkSize, config.chunkOverlap);
   const summaries = await Promise.all(chunks.map((chunk) => summarizeChunk(chunk)));
   const combinedSummary = summaries.join("\n\n");
@@ -20726,15 +20724,6 @@ function calculateSentenceScore(sentence) {
   }
   return score;
 }
-function getProcessingStats(processed) {
-  if (!processed.isProcessed) {
-    return `Direct processing (${processed.originalLength} chars)`;
-  }
-  const reductionPercent = Math.round(
-    (processed.originalLength - processed.processedLength) / processed.originalLength * 100
-  );
-  return `Preprocessed: ${processed.originalLength} \u2192 ${processed.processedLength} chars (-${reductionPercent}%)`;
-}
 
 // handlers/ai-generate.ts
 async function handleAiGenerate(event) {
@@ -20753,10 +20742,8 @@ async function handleAiGenerate(event) {
       return createErrorResponse(500, "ai_not_configured", "Bedrock region not configured");
     }
     const status = aiConcurrencyLimiter.getStatus();
-    console.log(`AI Concurrency Status: ${JSON.stringify(status)}`);
     const aiResult = await withConcurrencyControl(async () => {
       const processedText = await preprocessText(validatedData.content);
-      console.log(`Text processing: ${getProcessingStats(processedText)}`);
       return await withRetry(
         async () => {
           try {
@@ -20917,50 +20904,23 @@ function apiToDynamo(report, reportId, userId) {
   };
 }
 async function createReport(reportItem) {
-  console.log("\u{1F50D} createReport \u958B\u59CB");
-  console.log("\u4FDD\u5B58\u3059\u308B\u30A2\u30A4\u30C6\u30E0:", reportItem);
-  console.log("\u30C6\u30FC\u30D6\u30EB\u540D:", DDB_REPORTS);
   const command = new import_lib_dynamodb.PutCommand({
     TableName: DDB_REPORTS,
     Item: reportItem
   });
-  console.log("\u5B9F\u884C\u3059\u308BPutCommand:", {
-    tableName: command.input.TableName,
-    item: command.input.Item
-  });
-  const result = await docClient.send(command);
-  console.log("\u2705 PutCommand\u5B9F\u884C\u7D50\u679C:", result);
+  await docClient.send(command);
 }
 async function getReport(reportId) {
-  console.log("\u{1F50D} getReport \u958B\u59CB");
-  console.log("\u53D6\u5F97\u3059\u308B\u30EC\u30DD\u30FC\u30C8ID:", reportId);
-  console.log("\u30C6\u30FC\u30D6\u30EB\u540D:", DDB_REPORTS);
   const command = new import_lib_dynamodb.GetCommand({
     TableName: DDB_REPORTS,
     Key: {
       ReportId: reportId
     }
   });
-  console.log("\u5B9F\u884C\u3059\u308BGetCommand:", {
-    tableName: command.input.TableName,
-    key: command.input.Key
-  });
   const result = await docClient.send(command);
-  console.log("\u2705 GetCommand\u5B9F\u884C\u7D50\u679C:", {
-    item: result.Item ? {
-      ReportId: result.Item.ReportId,
-      Title: result.Item.Title,
-      Category: result.Item.Category,
-      CreatedAt: result.Item.CreatedAt
-    } : null
-  });
   return result.Item || null;
 }
 async function queryReports(params) {
-  console.log("\u{1F50D} queryReports \u958B\u59CB");
-  console.log("\u30D1\u30E9\u30E1\u30FC\u30BF:", params);
-  console.log("\u30C6\u30FC\u30D6\u30EB\u540D:", DDB_REPORTS);
-  console.log("\u30EA\u30FC\u30B8\u30E7\u30F3:", AWS_REGION);
   const { category, from, to, nextToken, q: q2, userId, limit: limit2 } = params;
   const queryLimit = limit2 || 20;
   let command;
@@ -20968,7 +20928,6 @@ async function queryReports(params) {
   if (nextToken) {
     try {
       exclusiveStartKey = JSON.parse(Buffer.from(nextToken, "base64").toString());
-      console.log("NextToken \u30C7\u30B3\u30FC\u30C9\u7D50\u679C:", exclusiveStartKey);
     } catch (error) {
       console.error("\u274C NextToken \u30C7\u30B3\u30FC\u30C9\u30A8\u30E9\u30FC:", error);
       throw new Error("Invalid nextToken");
@@ -21031,38 +20990,7 @@ async function queryReports(params) {
       ExclusiveStartKey: exclusiveStartKey
     });
   }
-  if (command instanceof import_lib_dynamodb.QueryCommand) {
-    console.log("\u5B9F\u884C\u3059\u308B\u30B3\u30DE\u30F3\u30C9 (Query):", {
-      type: "QueryCommand",
-      tableName: command.input.TableName,
-      indexName: command.input.IndexName,
-      keyConditionExpression: command.input.KeyConditionExpression,
-      expressionAttributeValues: command.input.ExpressionAttributeValues,
-      limit: command.input.Limit,
-      scanIndexForward: command.input.ScanIndexForward
-    });
-  } else {
-    console.log("\u5B9F\u884C\u3059\u308B\u30B3\u30DE\u30F3\u30C9 (Scan):", {
-      type: "ScanCommand",
-      tableName: command.input.TableName,
-      filterExpression: command.input.FilterExpression,
-      expressionAttributeValues: command.input.ExpressionAttributeValues,
-      limit: command.input.Limit
-    });
-  }
   const result = await docClient.send(command);
-  console.log("DynamoDB\u5B9F\u884C\u7D50\u679C:", {
-    itemCount: result.Items?.length || 0,
-    scannedCount: result.ScannedCount,
-    consumedCapacity: result.ConsumedCapacity,
-    lastEvaluatedKey: result.LastEvaluatedKey,
-    items: result.Items?.map((item) => ({
-      ReportId: item.ReportId,
-      Title: item.Title,
-      Category: item.Category,
-      CreatedAt: item.CreatedAt
-    })) || []
-  });
   return {
     items: result.Items || [],
     lastEvaluatedKey: result.LastEvaluatedKey
@@ -21072,23 +21000,15 @@ async function queryReports(params) {
 // handlers/reports.ts
 async function handleCreateReport(event) {
   try {
-    console.log("\u{1F50D} handleCreateReport \u958B\u59CB");
-    console.log("Event body:", event.body);
     const userId = await getUserId(event);
-    console.log("\u53D6\u5F97\u3057\u305F\u30E6\u30FC\u30B6\u30FCID:", userId);
     if (!userId) {
       return createErrorResponse(401, "Unauthorized", "Valid JWT token required");
     }
     const body = JSON.parse(event.body || "{}");
-    console.log("\u30D1\u30FC\u30B9\u3057\u305F\u30DC\u30C7\u30A3:", body);
     const validatedData = CreateReportSchema.parse(body);
-    console.log("\u30D0\u30EA\u30C7\u30FC\u30B7\u30E7\u30F3\u5F8C\u306E\u30C7\u30FC\u30BF:", validatedData);
     const reportId = v4_default();
-    console.log("\u751F\u6210\u3057\u305F\u30EC\u30DD\u30FC\u30C8ID:", reportId);
     const reportItem = apiToDynamo(validatedData, reportId, userId);
-    console.log("DynamoDB\u4FDD\u5B58\u7528\u30C7\u30FC\u30BF:", reportItem);
     await createReport(reportItem);
-    console.log("\u2705 DynamoDB\u3078\u306E\u4FDD\u5B58\u5B8C\u4E86");
     return createResponse(201, { reportId });
   } catch (error) {
     if (error instanceof external_exports.ZodError) {
@@ -21147,38 +21067,23 @@ async function handleGetReports(event) {
 }
 async function handleGetReport(event) {
   try {
-    console.log("\u{1F50D} handleGetReport \u958B\u59CB");
-    console.log("Event pathParameters:", event.pathParameters);
-    console.log("Event headers:", event.headers);
     const userId = await getUserId(event);
-    console.log("\u53D6\u5F97\u3057\u305F\u30E6\u30FC\u30B6\u30FCID:", userId);
     if (!userId) {
       return createErrorResponse(401, "Unauthorized", "Valid JWT token required");
     }
     const reportId = event.pathParameters?.id;
-    console.log("\u53D6\u5F97\u3059\u308B\u30EC\u30DD\u30FC\u30C8ID:", reportId);
     if (!reportId) {
       return createErrorResponse(400, "BadRequest", "Report ID is required");
     }
-    console.log("\u{1F50D} getReport\u95A2\u6570\u3092\u547C\u3073\u51FA\u3057\u4E2D...");
     const reportItem = await getReport(reportId);
-    console.log("DynamoDB\u304B\u3089\u53D6\u5F97\u3057\u305F\u30A2\u30A4\u30C6\u30E0:", reportItem);
     if (!reportItem) {
-      console.log("\u274C \u30EC\u30DD\u30FC\u30C8\u304C\u898B\u3064\u304B\u308A\u307E\u305B\u3093");
       return createErrorResponse(404, "NotFound", "Report not found");
     }
-    console.log("\u{1F504} dynamoToApi\u5909\u63DB\u4E2D...");
     const apiItem = dynamoToApi(reportItem);
-    console.log("\u5909\u63DB\u5F8C\u306EAPI\u30A2\u30A4\u30C6\u30E0:", apiItem);
-    console.log("\u2705 handleGetReport \u6B63\u5E38\u7D42\u4E86");
     return createResponse(200, apiItem);
   } catch (error) {
-    console.error("\u274C handleGetReport \u30A8\u30E9\u30FC\u8A73\u7D30:", error);
-    console.error("\u30A8\u30E9\u30FC\u30BF\u30A4\u30D7:", typeof error);
-    const errorObj = error;
-    console.error("\u30A8\u30E9\u30FC\u30E1\u30C3\u30BB\u30FC\u30B8:", errorObj?.message);
-    console.error("\u30A8\u30E9\u30FC\u30B9\u30BF\u30C3\u30AF:", errorObj?.stack);
-    const errorMessage = errorObj?.message || "Unknown error occurred";
+    console.error("\u274C handleGetReport \u30A8\u30E9\u30FC:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
     return createErrorResponse(500, "InternalError", `Failed to get report: ${errorMessage}`);
   }
 }
@@ -21286,12 +21191,10 @@ function generateAdvice(categories, scope, totalReports) {
 // index.ts
 var handler = async (event, context) => {
   try {
-    console.log("Event:", JSON.stringify(event, null, 2));
     try {
       const method = event.requestContext.http.method;
       const path = event.requestContext.http.path;
       const routeKey = event.routeKey || `${method} ${path}`;
-      console.log(`Processing route: ${routeKey}, method: ${method}, path: ${path}`);
       if (method === "OPTIONS") {
         return createOptionsResponse();
       }
