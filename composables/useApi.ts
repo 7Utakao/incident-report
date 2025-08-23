@@ -40,7 +40,6 @@ export const useApi = () => {
           throw new Error('認証が必要です。ログインしてください。');
         }
       } catch (authError) {
-        console.error('認証エラー:', authError);
         throw new Error('認証が必要です。ログインしてください。');
       }
     }
@@ -66,7 +65,6 @@ export const useApi = () => {
 
       return await response.json();
     } catch (error) {
-      console.error('API call failed:', error);
       throw error;
     }
   };
@@ -208,10 +206,6 @@ export const useApi = () => {
               const retryAfter = response.headers.get('Retry-After');
               const retrySeconds = retryAfter ? parseInt(retryAfter) : 2;
 
-              console.log(
-                `503エラー: ${retrySeconds}秒後にリトライします (${retryCount + 1}/${MAX_RETRIES})`,
-              );
-
               // 指定された時間待機してリトライ
               await new Promise((resolve) => setTimeout(resolve, retrySeconds * 1000));
               isGenerating = false; // リトライのためにフラグをリセット
@@ -230,9 +224,6 @@ export const useApi = () => {
                 errorData.message?.includes('Too many requests') ||
                 errorData.message?.includes('overload')
               ) {
-                console.log(
-                  `500エラー（過負荷）: 3秒後にリトライします (${retryCount + 1}/${MAX_RETRIES})`,
-                );
                 await new Promise((resolve) => setTimeout(resolve, 3000));
                 isGenerating = false;
                 return ai.generate(originalText, retryCount + 1);
@@ -279,7 +270,6 @@ export const useApi = () => {
             suggestedReplacements: json.suggestedReplacements ?? [],
           };
         } catch (error) {
-          console.error('AI generation failed:', error);
           throw error;
         } finally {
           isGenerating = false;

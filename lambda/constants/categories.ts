@@ -337,6 +337,12 @@ export const CATEGORIES: Record<string, Category> = {
     description: 'システムの監視や異常検知が不十分だった',
     group: 'プロセス・手順関連',
   },
+  WHY_PRC_009: {
+    code: 'WHY_PRC_009',
+    displayName: 'データ品質管理不備',
+    description: 'データの品質管理や検証プロセスに問題があった',
+    group: 'プロセス・手順関連',
+  },
   WHY_PRC_010: {
     code: 'WHY_PRC_010',
     displayName: 'セキュリティ/PII取り扱いの不備',

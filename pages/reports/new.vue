@@ -288,12 +288,8 @@ const generateReport = async () => {
 
   try {
     generating.value = true;
-    console.log('🚀 AI生成開始');
-
     const { ai } = useApi();
     const result = await ai.generate(initialContent.value.trim());
-
-    console.log('✅ AI生成結果:', result);
 
     // フォームへ反映
     report.value = {
@@ -305,12 +301,8 @@ const generateReport = async () => {
         ? result.improvements.join('\n')
         : String(result.improvements || '改善案を検討してください'),
     };
-
-    console.log('✅ Report mapped successfully:', report.value);
-    console.log('🎉 AI生成が正常に完了しました！');
   } catch (error: any) {
     // 失敗理由の見える化
-    console.error('ai/generate failed:', error);
 
     // 503 Service Unavailable の場合は特別な処理
     if (error.statusCode === 503) {
@@ -335,8 +327,6 @@ const submitReport = async () => {
   try {
     submitting.value = true;
 
-    console.log('🔍 投稿前バリデーション開始');
-
     // 投稿前バリデーション
     const { validate } = useApi();
     const validationData = {
@@ -348,7 +338,6 @@ const submitReport = async () => {
     };
 
     const validation = await validate.report(validationData);
-    console.log('📋 バリデーション結果:', validation);
 
     // エラーがある場合は投稿をブロック
     if (!validation.valid) {
@@ -379,9 +368,7 @@ const submitReport = async () => {
       }
     }
 
-    console.log('✅ バリデーション通過、投稿処理開始');
-
-    // デバッグログ: 送信データを確認
+    // 送信データを準備
     const submitData = {
       title: report.value.title,
       body: report.value.content,
@@ -389,7 +376,6 @@ const submitReport = async () => {
       createdAt: report.value.occurredAt,
       improvements: report.value.improvements, // 改善案を追加
     };
-    console.log('🚀 レポート送信データ:', submitData);
 
     // 実際のAPI呼び出し
     const { reports } = useApi();
@@ -397,7 +383,6 @@ const submitReport = async () => {
 
     showSuccessDialog.value = true;
   } catch (error: any) {
-    console.error('Report submission failed:', error);
     alert(`投稿に失敗しました: ${error.message || error}`);
   } finally {
     submitting.value = false;
