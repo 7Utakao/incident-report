@@ -69,7 +69,9 @@ export async function getStats(event: APIGatewayProxyEventV2): Promise<APIGatewa
     }
 
     // DynamoDBからデータ取得
-    const queryParams: any = {};
+    const queryParams: any = {
+      limit: 1000, // 統計計算では全データが必要なので大きな値を設定
+    };
     if (from) queryParams.from = from;
     if (to) queryParams.to = to;
 

@@ -1,6 +1,10 @@
 import { signIn, signOut, getCurrentUser, fetchAuthSession, confirmSignIn } from 'aws-amplify/auth';
 import { Amplify } from 'aws-amplify';
-import { waitForAmplifyInit } from '~/plugins/amplify.client';
+import {
+  waitForAmplifyInit,
+  forceReinitializeAmplify,
+  verifyAmplifyConfig,
+} from '~/plugins/amplify.client';
 
 // グローバルな状態管理
 const globalUser = ref<any>(null);
@@ -13,119 +17,133 @@ const globalSignInResult = ref<any>(null);
 export const useAuth = () => {
   // ログイン
   const login = async (username: string, password: string) => {
-    console.log('useAuth.login called with:', { username, passwordLength: password.length });
-    try {
-      console.log('Setting loading to true');
-      globalLoading.value = true;
-      globalError.value = null;
+    console.log('🔐 useAuth.login called with:', { username, passwordLength: password.length });
+    let retryCount = 0;
+    const maxRetries = 2;
 
-      // Amplifyの初期化完了を待機
-      console.log('Waiting for Amplify initialization...');
-      await waitForAmplifyInit();
-      console.log('Amplify initialization completed');
-
-      // Amplifyの設定状態を確認
+    while (retryCount <= maxRetries) {
       try {
-        const config = Amplify.getConfig();
-        console.log('Current Amplify config in login:', config);
+        console.log(`🔄 Login attempt ${retryCount + 1}/${maxRetries + 1}`);
+        globalLoading.value = true;
+        globalError.value = null;
 
-        // Amplify v6では設定の構造が異なる可能性があるため、より柔軟にチェック
-        const hasAuthConfig =
-          config && (config.Auth?.Cognito?.userPoolId || Object.keys(config).length > 0);
+        // Amplifyの初期化完了を待機
+        console.log('⏳ Waiting for Amplify initialization...');
+        await waitForAmplifyInit();
+        console.log('✅ Amplify initialization completed');
 
-        if (!hasAuthConfig) {
-          throw new Error('Amplify Auth configuration is missing');
+        // Amplifyの設定状態を確認
+        const isConfigValid = verifyAmplifyConfig();
+        if (!isConfigValid) {
+          console.warn('⚠️ Amplify configuration invalid, attempting force reinitialization...');
+          const reinitSuccess = await forceReinitializeAmplify();
+          if (!reinitSuccess) {
+            throw new Error('Amplify configuration failed after reinitialization');
+          }
         }
-      } catch (configError) {
-        console.error('Amplify configuration check failed:', configError);
-        globalError.value = '認証システムの設定に問題があります';
+
+        console.log('📞 Calling AWS Cognito signIn...');
+        const signInResult = await signIn({
+          username: username,
+          password: password,
+        });
+
+        console.log('✅ signIn full result:', signInResult);
+        console.log('📊 signIn result:', { isSignedIn: signInResult.isSignedIn });
+
+        // 追加の詳細情報をログ出力
+        if (signInResult.nextStep) {
+          console.log('📋 signIn nextStep:', signInResult.nextStep);
+        }
+
+        if (signInResult.isSignedIn) {
+          console.log('🎉 Sign in successful, getting current user...');
+          // ログイン成功時は即座に認証状態を更新
+          try {
+            const currentUser = await getCurrentUser();
+            console.log('👤 getCurrentUser result:', currentUser);
+            if (currentUser) {
+              globalUser.value = currentUser;
+              globalIsAuthenticated.value = true;
+              console.log('✅ 認証状態を更新しました:', {
+                user: currentUser,
+                isAuthenticated: globalIsAuthenticated.value,
+              });
+              return true;
+            }
+          } catch (userError) {
+            console.error('❌ ユーザー情報取得エラー:', userError);
+            // ユーザー情報取得に失敗してもログインは成功とみなす
+            console.log('⚠️ ユーザー情報取得失敗でも認証成功とみなします');
+            globalIsAuthenticated.value = true;
+            return true;
+          }
+        } else if (
+          signInResult.nextStep?.signInStep === 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED'
+        ) {
+          console.log('🔑 新しいパスワードの設定が必要です');
+          globalSignInResult.value = signInResult;
+          globalNeedsNewPassword.value = true;
+          return 'NEEDS_NEW_PASSWORD';
+        }
+        console.log('❌ Sign in failed or isSignedIn is false');
         return false;
-      }
+      } catch (err: any) {
+        console.error(`❌ ログインエラー (試行 ${retryCount + 1}):`, err);
 
-      console.log('Calling AWS Cognito signIn...');
-      const signInResult = await signIn({
-        username: username,
-        password: password,
-      });
+        // Amplify設定エラーの場合はリトライ
+        if (
+          (err.name === 'ConfigError' ||
+            err.message?.includes('Amplify has not been configured') ||
+            err.message?.includes('Auth UserPool not configured')) &&
+          retryCount < maxRetries
+        ) {
+          console.log(`🔄 Amplify設定エラーのためリトライします (${retryCount + 1}/${maxRetries})`);
+          retryCount++;
+          await new Promise((resolve) => setTimeout(resolve, 1000)); // 1秒待機
+          continue;
+        }
 
-      console.log('signIn full result:', signInResult);
-      console.log('signIn result:', { isSignedIn: signInResult.isSignedIn });
-
-      // 追加の詳細情報をログ出力
-      if (signInResult.nextStep) {
-        console.log('signIn nextStep:', signInResult.nextStep);
-      }
-
-      if (signInResult.isSignedIn) {
-        console.log('Sign in successful, getting current user...');
-        // ログイン成功時は即座に認証状態を更新
-        try {
-          const currentUser = await getCurrentUser();
-          console.log('getCurrentUser result:', currentUser);
-          if (currentUser) {
-            globalUser.value = currentUser;
+        // 既にサインイン済みの場合の処理
+        if (
+          err.name === 'AlreadySignedInException' ||
+          err.message?.includes('There is already a signed in user')
+        ) {
+          console.log('✅ 既にサインイン済みです、認証状態を更新します');
+          try {
+            const currentUser = await getCurrentUser();
+            if (currentUser) {
+              globalUser.value = currentUser;
+              globalIsAuthenticated.value = true;
+              console.log('✅ 既存のサインイン状態を認識しました:', {
+                user: currentUser,
+                isAuthenticated: globalIsAuthenticated.value,
+              });
+              return true;
+            }
+          } catch (userError) {
+            console.error('❌ 既存ユーザー情報取得エラー:', userError);
+            // ユーザー情報取得に失敗してもログインは成功とみなす
             globalIsAuthenticated.value = true;
-            console.log('認証状態を更新しました:', {
-              user: currentUser,
-              isAuthenticated: globalIsAuthenticated.value,
-            });
             return true;
           }
-        } catch (userError) {
-          console.error('ユーザー情報取得エラー:', userError);
-          // ユーザー情報取得に失敗してもログインは成功とみなす
-          console.log('ユーザー情報取得失敗でも認証成功とみなします');
-          globalIsAuthenticated.value = true;
-          return true;
+        } else if (err.name === 'UserNotFoundException') {
+          globalError.value = 'ユーザーが見つかりません';
+        } else if (err.name === 'NotAuthorizedException') {
+          globalError.value = 'ユーザー名またはパスワードが正しくありません';
+        } else {
+          globalError.value = err.message || 'ログインに失敗しました';
         }
-      } else if (
-        signInResult.nextStep?.signInStep === 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED'
-      ) {
-        console.log('新しいパスワードの設定が必要です');
-        globalSignInResult.value = signInResult;
-        globalNeedsNewPassword.value = true;
-        return 'NEEDS_NEW_PASSWORD';
+        return false;
+      } finally {
+        globalLoading.value = false;
       }
-      console.log('Sign in failed or isSignedIn is false');
-      return false;
-    } catch (err: any) {
-      console.error('ログインエラー:', err);
-
-      // 既にサインイン済みの場合の処理
-      if (
-        err.name === 'AlreadySignedInException' ||
-        err.message?.includes('There is already a signed in user')
-      ) {
-        console.log('既にサインイン済みです、認証状態を更新します');
-        try {
-          const currentUser = await getCurrentUser();
-          if (currentUser) {
-            globalUser.value = currentUser;
-            globalIsAuthenticated.value = true;
-            console.log('既存のサインイン状態を認識しました:', {
-              user: currentUser,
-              isAuthenticated: globalIsAuthenticated.value,
-            });
-            return true;
-          }
-        } catch (userError) {
-          console.error('既存ユーザー情報取得エラー:', userError);
-          // ユーザー情報取得に失敗してもログインは成功とみなす
-          globalIsAuthenticated.value = true;
-          return true;
-        }
-      } else if (err.name === 'UserNotFoundException') {
-        globalError.value = 'ユーザーが見つかりません';
-      } else if (err.name === 'NotAuthorizedException') {
-        globalError.value = 'ユーザー名またはパスワードが正しくありません';
-      } else {
-        globalError.value = err.message || 'ログインに失敗しました';
-      }
-      return false;
-    } finally {
-      console.log('Setting loading to false');
-      globalLoading.value = false;
     }
+
+    // 全てのリトライが失敗した場合
+    console.error('❌ 全てのログイン試行が失敗しました');
+    globalError.value = 'ログインに失敗しました。しばらく時間をおいて再度お試しください。';
+    return false;
   };
 
   // ログアウト

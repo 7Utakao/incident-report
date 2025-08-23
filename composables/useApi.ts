@@ -288,6 +288,32 @@ export const useApi = () => {
     })(),
   };
 
+  // バリデーション関連のAPI
+  const validate = {
+    // レポートバリデーション
+    report: (data: {
+      title: string;
+      category: string;
+      occurredAt: string;
+      content: string;
+      improvements: string;
+    }) => {
+      return apiCall<{
+        valid: boolean;
+        errors: string[];
+        warnings: string[];
+        suggestedReplacements: Array<{
+          original: string;
+          suggested: string;
+          type: string;
+        }>;
+      }>('/validate', {
+        method: 'POST',
+        body: data,
+      });
+    },
+  };
+
   // ヘルスチェック
   const health = () => {
     return apiCall<{ ok: boolean }>('/health', {
@@ -302,6 +328,7 @@ export const useApi = () => {
     dashboard,
     stats,
     ai,
+    validate,
     health,
   };
 };

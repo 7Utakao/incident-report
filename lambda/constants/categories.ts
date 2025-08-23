@@ -307,6 +307,42 @@ export const CATEGORIES: Record<string, Category> = {
     description: '承認プロセスの設計や運用に問題があった',
     group: 'プロセス・手順関連',
   },
+  WHY_PRC_004: {
+    code: 'WHY_PRC_004',
+    displayName: '評価指標の未整備',
+    description: '評価指標や測定方法が整備されていなかった',
+    group: 'プロセス・手順関連',
+  },
+  WHY_PRC_005: {
+    code: 'WHY_PRC_005',
+    displayName: '推論コストの見積もり誤り',
+    description: 'AI推論コストの見積もりや管理に問題があった',
+    group: 'プロセス・手順関連',
+  },
+  WHY_PRC_006: {
+    code: 'WHY_PRC_006',
+    displayName: 'RAGの更新フロー不備',
+    description: 'RAGシステムの更新フローや管理に問題があった',
+    group: 'プロセス・手順関連',
+  },
+  WHY_PRC_007: {
+    code: 'WHY_PRC_007',
+    displayName: 'キー/権限管理の不備',
+    description: 'APIキーや権限管理に問題があった',
+    group: 'プロセス・手順関連',
+  },
+  WHY_PRC_008: {
+    code: 'WHY_PRC_008',
+    displayName: 'モニタリング不足',
+    description: 'システムの監視や異常検知が不十分だった',
+    group: 'プロセス・手順関連',
+  },
+  WHY_PRC_010: {
+    code: 'WHY_PRC_010',
+    displayName: 'セキュリティ/PII取り扱いの不備',
+    description: 'セキュリティや個人情報の取り扱いに問題があった',
+    group: 'プロセス・手順関連',
+  },
 
   // ツール・技術関連 (Tools & Technology)
   WHY_TOL_001: {

@@ -20039,6 +20039,42 @@ var CATEGORIES = {
     description: "\u627F\u8A8D\u30D7\u30ED\u30BB\u30B9\u306E\u8A2D\u8A08\u3084\u904B\u7528\u306B\u554F\u984C\u304C\u3042\u3063\u305F",
     group: "\u30D7\u30ED\u30BB\u30B9\u30FB\u624B\u9806\u95A2\u9023"
   },
+  WHY_PRC_004: {
+    code: "WHY_PRC_004",
+    displayName: "\u8A55\u4FA1\u6307\u6A19\u306E\u672A\u6574\u5099",
+    description: "\u8A55\u4FA1\u6307\u6A19\u3084\u6E2C\u5B9A\u65B9\u6CD5\u304C\u6574\u5099\u3055\u308C\u3066\u3044\u306A\u304B\u3063\u305F",
+    group: "\u30D7\u30ED\u30BB\u30B9\u30FB\u624B\u9806\u95A2\u9023"
+  },
+  WHY_PRC_005: {
+    code: "WHY_PRC_005",
+    displayName: "\u63A8\u8AD6\u30B3\u30B9\u30C8\u306E\u898B\u7A4D\u3082\u308A\u8AA4\u308A",
+    description: "AI\u63A8\u8AD6\u30B3\u30B9\u30C8\u306E\u898B\u7A4D\u3082\u308A\u3084\u7BA1\u7406\u306B\u554F\u984C\u304C\u3042\u3063\u305F",
+    group: "\u30D7\u30ED\u30BB\u30B9\u30FB\u624B\u9806\u95A2\u9023"
+  },
+  WHY_PRC_006: {
+    code: "WHY_PRC_006",
+    displayName: "RAG\u306E\u66F4\u65B0\u30D5\u30ED\u30FC\u4E0D\u5099",
+    description: "RAG\u30B7\u30B9\u30C6\u30E0\u306E\u66F4\u65B0\u30D5\u30ED\u30FC\u3084\u7BA1\u7406\u306B\u554F\u984C\u304C\u3042\u3063\u305F",
+    group: "\u30D7\u30ED\u30BB\u30B9\u30FB\u624B\u9806\u95A2\u9023"
+  },
+  WHY_PRC_007: {
+    code: "WHY_PRC_007",
+    displayName: "\u30AD\u30FC/\u6A29\u9650\u7BA1\u7406\u306E\u4E0D\u5099",
+    description: "API\u30AD\u30FC\u3084\u6A29\u9650\u7BA1\u7406\u306B\u554F\u984C\u304C\u3042\u3063\u305F",
+    group: "\u30D7\u30ED\u30BB\u30B9\u30FB\u624B\u9806\u95A2\u9023"
+  },
+  WHY_PRC_008: {
+    code: "WHY_PRC_008",
+    displayName: "\u30E2\u30CB\u30BF\u30EA\u30F3\u30B0\u4E0D\u8DB3",
+    description: "\u30B7\u30B9\u30C6\u30E0\u306E\u76E3\u8996\u3084\u7570\u5E38\u691C\u77E5\u304C\u4E0D\u5341\u5206\u3060\u3063\u305F",
+    group: "\u30D7\u30ED\u30BB\u30B9\u30FB\u624B\u9806\u95A2\u9023"
+  },
+  WHY_PRC_010: {
+    code: "WHY_PRC_010",
+    displayName: "\u30BB\u30AD\u30E5\u30EA\u30C6\u30A3/PII\u53D6\u308A\u6271\u3044\u306E\u4E0D\u5099",
+    description: "\u30BB\u30AD\u30E5\u30EA\u30C6\u30A3\u3084\u500B\u4EBA\u60C5\u5831\u306E\u53D6\u308A\u6271\u3044\u306B\u554F\u984C\u304C\u3042\u3063\u305F",
+    group: "\u30D7\u30ED\u30BB\u30B9\u30FB\u624B\u9806\u95A2\u9023"
+  },
   // ツール・技術関連 (Tools & Technology)
   WHY_TOL_001: {
     code: "WHY_TOL_001",
@@ -20865,15 +20901,18 @@ function dynamoToApi(item) {
   };
 }
 function apiToDynamo(report, reportId, userId) {
+  const createdAt = report.createdAt || (/* @__PURE__ */ new Date()).toISOString();
+  const category = report.category;
   return {
+    // Primary Key (existing table structure)
     ReportId: reportId,
     UserId: userId,
     Title: report.title,
     Body: report.body,
     Summary: report.summary,
     Tags: report.tags,
-    Category: report.category,
-    CreatedAt: report.createdAt || (/* @__PURE__ */ new Date()).toISOString(),
+    Category: category,
+    CreatedAt: createdAt,
     Improvements: report.improvements
   };
 }
@@ -20893,13 +20932,28 @@ async function createReport(reportItem) {
   console.log("\u2705 PutCommand\u5B9F\u884C\u7D50\u679C:", result);
 }
 async function getReport(reportId) {
+  console.log("\u{1F50D} getReport \u958B\u59CB");
+  console.log("\u53D6\u5F97\u3059\u308B\u30EC\u30DD\u30FC\u30C8ID:", reportId);
+  console.log("\u30C6\u30FC\u30D6\u30EB\u540D:", DDB_REPORTS);
   const command = new import_lib_dynamodb.GetCommand({
     TableName: DDB_REPORTS,
     Key: {
       ReportId: reportId
     }
   });
+  console.log("\u5B9F\u884C\u3059\u308BGetCommand:", {
+    tableName: command.input.TableName,
+    key: command.input.Key
+  });
   const result = await docClient.send(command);
+  console.log("\u2705 GetCommand\u5B9F\u884C\u7D50\u679C:", {
+    item: result.Item ? {
+      ReportId: result.Item.ReportId,
+      Title: result.Item.Title,
+      Category: result.Item.Category,
+      CreatedAt: result.Item.CreatedAt
+    } : null
+  });
   return result.Item || null;
 }
 async function queryReports(params) {
@@ -20920,16 +20974,27 @@ async function queryReports(params) {
       throw new Error("Invalid nextToken");
     }
   }
-  if (category && from && to) {
+  if (category) {
+    let keyConditionExpression = "Category = :category";
+    const expressionAttributeValues = {
+      ":category": category
+    };
+    if (from && to) {
+      keyConditionExpression += " AND CreatedAt BETWEEN :from AND :to";
+      expressionAttributeValues[":from"] = from;
+      expressionAttributeValues[":to"] = to;
+    } else if (from) {
+      keyConditionExpression += " AND CreatedAt >= :from";
+      expressionAttributeValues[":from"] = from;
+    } else if (to) {
+      keyConditionExpression += " AND CreatedAt <= :to";
+      expressionAttributeValues[":to"] = to;
+    }
     command = new import_lib_dynamodb.QueryCommand({
       TableName: DDB_REPORTS,
       IndexName: "Category-CreatedAt-Index",
-      KeyConditionExpression: "Category = :category AND CreatedAt BETWEEN :from AND :to",
-      ExpressionAttributeValues: {
-        ":category": category,
-        ":from": from,
-        ":to": to
-      },
+      KeyConditionExpression: keyConditionExpression,
+      ExpressionAttributeValues: expressionAttributeValues,
       ScanIndexForward: false,
       // Descending order (newest first)
       Limit: queryLimit,
@@ -21054,7 +21119,7 @@ async function handleGetReports(event) {
       nextToken,
       q: q2,
       userId: actualAuthorId,
-      limit: limit2 ? parseInt(limit2) : void 0
+      limit: limit2 ? parseInt(limit2) : 1e3
     });
     if (countOnly === "true") {
       return createResponse(200, { count: result.items.length });
@@ -21082,23 +21147,39 @@ async function handleGetReports(event) {
 }
 async function handleGetReport(event) {
   try {
+    console.log("\u{1F50D} handleGetReport \u958B\u59CB");
+    console.log("Event pathParameters:", event.pathParameters);
+    console.log("Event headers:", event.headers);
     const userId = await getUserId(event);
+    console.log("\u53D6\u5F97\u3057\u305F\u30E6\u30FC\u30B6\u30FCID:", userId);
     if (!userId) {
       return createErrorResponse(401, "Unauthorized", "Valid JWT token required");
     }
     const reportId = event.pathParameters?.id;
+    console.log("\u53D6\u5F97\u3059\u308B\u30EC\u30DD\u30FC\u30C8ID:", reportId);
     if (!reportId) {
       return createErrorResponse(400, "BadRequest", "Report ID is required");
     }
+    console.log("\u{1F50D} getReport\u95A2\u6570\u3092\u547C\u3073\u51FA\u3057\u4E2D...");
     const reportItem = await getReport(reportId);
+    console.log("DynamoDB\u304B\u3089\u53D6\u5F97\u3057\u305F\u30A2\u30A4\u30C6\u30E0:", reportItem);
     if (!reportItem) {
+      console.log("\u274C \u30EC\u30DD\u30FC\u30C8\u304C\u898B\u3064\u304B\u308A\u307E\u305B\u3093");
       return createErrorResponse(404, "NotFound", "Report not found");
     }
+    console.log("\u{1F504} dynamoToApi\u5909\u63DB\u4E2D...");
     const apiItem = dynamoToApi(reportItem);
+    console.log("\u5909\u63DB\u5F8C\u306EAPI\u30A2\u30A4\u30C6\u30E0:", apiItem);
+    console.log("\u2705 handleGetReport \u6B63\u5E38\u7D42\u4E86");
     return createResponse(200, apiItem);
   } catch (error) {
-    console.error("Error getting report:", error);
-    return createErrorResponse(500, "InternalError", "Failed to get report");
+    console.error("\u274C handleGetReport \u30A8\u30E9\u30FC\u8A73\u7D30:", error);
+    console.error("\u30A8\u30E9\u30FC\u30BF\u30A4\u30D7:", typeof error);
+    const errorObj = error;
+    console.error("\u30A8\u30E9\u30FC\u30E1\u30C3\u30BB\u30FC\u30B8:", errorObj?.message);
+    console.error("\u30A8\u30E9\u30FC\u30B9\u30BF\u30C3\u30AF:", errorObj?.stack);
+    const errorMessage = errorObj?.message || "Unknown error occurred";
+    return createErrorResponse(500, "InternalError", `Failed to get report: ${errorMessage}`);
   }
 }
 
@@ -21137,7 +21218,10 @@ async function getStats(event) {
       from = today;
       to = today;
     }
-    const queryParams = {};
+    const queryParams = {
+      limit: 1e3
+      // 統計計算では全データが必要なので大きな値を設定
+    };
     if (from)
       queryParams.from = from;
     if (to)
@@ -21216,7 +21300,7 @@ var handler = async (event, context) => {
           return await handleHealth();
         } else if (method === "POST" && path === "/ai/generate") {
           return await handleAiGenerate(event);
-        } else if (method === "POST" && path === "/reports/validate") {
+        } else if (method === "POST" && path === "/validate") {
           return await handleValidateReport(event);
         } else if (method === "POST" && path === "/reports") {
           return await handleCreateReport(event);
@@ -21237,7 +21321,7 @@ var handler = async (event, context) => {
             return await handleHealth();
           case "POST /ai/generate":
             return await handleAiGenerate(event);
-          case "POST /reports/validate":
+          case "POST /validate":
             return await handleValidateReport(event);
           case "POST /reports":
             return await handleCreateReport(event);

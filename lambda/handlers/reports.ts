@@ -77,7 +77,7 @@ export async function handleGetReports(
       nextToken,
       q,
       userId: actualAuthorId,
-      limit: limit ? parseInt(limit) : undefined,
+      limit: limit ? parseInt(limit) : 1000,
     });
 
     // countOnlyが指定されている場合は件数のみ返す
@@ -114,26 +114,48 @@ export async function handleGetReport(
   event: APIGatewayProxyEventV2,
 ): Promise<APIGatewayProxyResultV2> {
   try {
+    console.log('🔍 handleGetReport 開始');
+    console.log('Event pathParameters:', event.pathParameters);
+    console.log('Event headers:', event.headers);
+
     const userId = await getUserId(event);
+    console.log('取得したユーザーID:', userId);
     if (!userId) {
       return createErrorResponse(401, 'Unauthorized', 'Valid JWT token required');
     }
 
     const reportId = event.pathParameters?.id;
+    console.log('取得するレポートID:', reportId);
     if (!reportId) {
       return createErrorResponse(400, 'BadRequest', 'Report ID is required');
     }
 
+    console.log('🔍 getReport関数を呼び出し中...');
     const reportItem = await getReport(reportId);
+    console.log('DynamoDBから取得したアイテム:', reportItem);
 
     if (!reportItem) {
+      console.log('❌ レポートが見つかりません');
       return createErrorResponse(404, 'NotFound', 'Report not found');
     }
 
+    console.log('🔄 dynamoToApi変換中...');
     const apiItem = dynamoToApi(reportItem);
+    console.log('変換後のAPIアイテム:', apiItem);
+
+    console.log('✅ handleGetReport 正常終了');
     return createResponse(200, apiItem);
   } catch (error) {
-    console.error('Error getting report:', error);
-    return createErrorResponse(500, 'InternalError', 'Failed to get report');
+    console.error('❌ handleGetReport エラー詳細:', error);
+    console.error('エラータイプ:', typeof error);
+
+    // エラーオブジェクトの型安全な処理
+    const errorObj = error as any;
+    console.error('エラーメッセージ:', errorObj?.message);
+    console.error('エラースタック:', errorObj?.stack);
+
+    // エラーの詳細情報を含めたレスポンス
+    const errorMessage = errorObj?.message || 'Unknown error occurred';
+    return createErrorResponse(500, 'InternalError', `Failed to get report: ${errorMessage}`);
   }
 }

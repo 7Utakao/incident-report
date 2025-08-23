@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>新しい報告を作成</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        background: #f8fafc;
+      }
+      .tile {
+        box-shadow: 0 10px 30px rgba(2, 6, 23, 0.06);
+      }
+    </style>
+  </head>
+  <body class="min-h-screen text-slate-900 p-6 md:p-10">
+    <header class="max-w-3xl mx-auto mb-6">
+      <h1 class="text-2xl font-bold">新しい報告を作成</h1>
+      <p class="text-slate-500 mt-1">
+        迷ったら「何が起きた」「どう影響した」の2つだけで大丈夫。AIがタイトル・カテゴリ・改善案を提案します。
+      </p>
+    </header>
+
+    <main class="max-w-3xl mx-auto">
+      <section class="tile bg-white rounded-2xl border p-4 md:p-6">
+        <h2 class="text-sm font-semibold text-slate-700 mb-3">インシデント報告</h2>
+
+        <!-- 原文（小さめに調整） -->
+        <div class="mb-5">
+          <label for="raw" class="block text-sm font-medium text-slate-700">本文</label>
+          <textarea
+            id="raw"
+            name="raw"
+            rows="6"
+            class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-[15px] leading-6 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 min-h-[9rem]"
+            placeholder="例：会議資料を別の取引先へ誤送信。すぐに連絡・回収依頼を行い影響調査中。原因は宛先オートコンプリートの選択ミス。"
+          ></textarea>
+          <div class="mt-2 flex justify-end">
+            <button
+              type="button"
+              class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 text-white px-3 py-2 text-sm hover:bg-emerald-700"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M5 8h14M7 12h10M9 16h6" />
+              </svg>
+              AI提案
+            </button>
+          </div>
+          <p class="mt-2 text-xs text-slate-500">
+            ※ AI提案は任意です。入力内容は後から自由に編集できます。
+          </p>
+        </div>
+
+        <!-- タイトル -->
+        <div class="mb-4">
+          <label for="title" class="block text-sm font-medium text-slate-700">タイトル *</label>
+          <input
+            id="title"
+            name="title"
+            type="text"
+            class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[15px] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400"
+            placeholder="例：宛先選択ミスにより誤送信が発生"
+          />
+        </div>
+
+        <!-- カテゴリ -->
+        <div class="mb-4">
+          <label for="category" class="block text-sm font-medium text-slate-700">カテゴリ</label>
+          <select
+            id="category"
+            name="category"
+            class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[15px] focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400"
+          >
+            <option value="">未選択</option>
+            <option>情報共有不足</option>
+            <option>チェック体制不備</option>
+            <option>作業ミス</option>
+            <option>アクセス権限の不備</option>
+          </select>
+        </div>
+
+        <!-- 発生日 -->
+        <div class="mb-4">
+          <label for="occurred" class="block text-sm font-medium text-slate-700">作成日時</label>
+          <input
+            id="occurred"
+            name="occurred"
+            type="date"
+            class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[15px] focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400"
+          />
+        </div>
+
+        <!-- 概要（整形後） -->
+        <div class="mb-4">
+          <label for="summary" class="block text-sm font-medium text-slate-700">内容</label>
+          <textarea
+            id="summary"
+            name="summary"
+            rows="5"
+            class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-[15px] leading-6 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 min-h-[8rem]"
+            placeholder="例：経緯・影響・対応・再発防止の順で簡潔に"
+          ></textarea>
+        </div>
+
+        <!-- 改善案 -->
+        <div class="mb-6">
+          <label for="improve" class="block text-sm font-medium text-slate-700">改善案</label>
+          <textarea
+            id="improve"
+            name="improve"
+            rows="5"
+            class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-[15px] leading-6 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 min-h-[8rem]"
+            placeholder="例：・宛先は最後に入力するルール化 ・ダブルチェックを運用に組み込む など"
+          ></textarea>
+        </div>
+
+        <!-- ボタン群 -->
+        <div class="flex items-center justify-between gap-3">
+          <button type="button" class="text-slate-600 hover:text-slate-800 text-sm">
+            キャンセル
+          </button>
+          <div class="flex items-center gap-3">
+            <button
+              type="reset"
+              class="rounded-xl bg-white border border-slate-200 text-slate-700 px-4 py-2 text-sm hover:bg-slate-50"
+            >
+              クリア
+            </button>
+            <button
+              type="submit"
+              class="rounded-xl bg-emerald-600 text-white px-5 py-2.5 text-sm font-medium hover:bg-emerald-700"
+            >
+              保存する
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

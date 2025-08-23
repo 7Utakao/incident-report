@@ -60,9 +60,12 @@
             <div>
               <label class="block text-sm font-medium text-secondary mb-2">カテゴリ</label>
               <div class="w-full px-3 py-2 border border-gray-300 rounded-token-md bg-gray-50">
-                <Badge :variant="getCategoryVariant(report.category)">
+                <span
+                  :class="getCategoryColor(report.category)"
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                >
                   {{ getCategoryDisplayName(report.category) }}
-                </Badge>
+                </span>
               </div>
             </div>
 
@@ -106,7 +109,11 @@
 import { ref, onMounted } from 'vue';
 import { format } from 'date-fns';
 import { ja } from 'date-fns/locale';
-import { getCategoryOptions } from '~/constants/categories';
+import {
+  getCategoryOptions,
+  getCategoryDisplayName,
+  getCategoryColorClasses,
+} from '~/constants/categories';
 
 // Components
 import Card from '~/components/ui/Card.vue';
@@ -143,20 +150,9 @@ const report = ref<Report | null>(null);
 const currentUserId = ref('user-123');
 
 // Methods
-const getCategoryVariant = (
-  category: string,
-): 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'outline' => {
-  const variants: Record<
-    string,
-    'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'outline'
-  > = {
-    '情報漏洩・誤送信': 'error',
-    システム障害: 'warning',
-    作業ミス: 'primary',
-    コミュニケーション: 'secondary',
-    その他: 'default',
-  };
-  return variants[category] || 'default';
+const getCategoryColor = (category: string) => {
+  const colors = getCategoryColorClasses(category);
+  return `${colors.bg} ${colors.text}`;
 };
 
 const formatDate = (dateString: string) => {
@@ -165,14 +161,6 @@ const formatDate = (dateString: string) => {
 
 const formatDateInput = (dateString: string) => {
   return format(new Date(dateString), 'yyyy-MM-dd', { locale: ja });
-};
-
-const getCategoryDisplayName = (category: string): string => {
-  // カテゴリの表示名を取得
-  const categoryOptions = getCategoryOptions();
-  const option = categoryOptions.find((opt: any) => opt.value === category);
-  console.log('🔍 カテゴリ表示名取得:', { category, option, result: option?.label || category });
-  return option?.label || category;
 };
 
 const editReport = () => {

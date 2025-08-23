@@ -35,7 +35,7 @@ export const handler = async (
           return await handleHealth();
         } else if (method === 'POST' && path === '/ai/generate') {
           return await handleAiGenerate(event);
-        } else if (method === 'POST' && path === '/reports/validate') {
+        } else if (method === 'POST' && path === '/validate') {
           return await handleValidateReport(event);
         } else if (method === 'POST' && path === '/reports') {
           return await handleCreateReport(event);
@@ -59,7 +59,7 @@ export const handler = async (
             return await handleHealth();
           case 'POST /ai/generate':
             return await handleAiGenerate(event);
-          case 'POST /reports/validate':
+          case 'POST /validate':
             return await handleValidateReport(event);
           case 'POST /reports':
             return await handleCreateReport(event);
