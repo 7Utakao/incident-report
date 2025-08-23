@@ -4,7 +4,7 @@
       <!-- Header -->
       <div class="text-center">
         <h1 class="text-3xl font-bold text-secondary">ログイン</h1>
-        <p class="mt-2 text-gray">インシデント報告システムにログインしてください</p>
+        <p class="mt-2 text-gray">Report Seedにログインしてください</p>
       </div>
 
       <!-- Login Form -->

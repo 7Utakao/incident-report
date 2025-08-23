@@ -9,7 +9,7 @@
         <div class="flex items-center justify-between h-16">
           <!-- ロゴ・タイトル -->
           <div class="flex items-center">
-            <h1 class="text-xl font-bold text-primaryDeep">報告システム</h1>
+            <h1 class="text-xl font-bold text-primaryDeep">Report Seed</h1>
           </div>
 
           <!-- デスクトップナビゲーション (lg以上) -->
