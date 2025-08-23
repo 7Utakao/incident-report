@@ -11,7 +11,7 @@ backend:
         # Lambda関数のZipファイル作成（Linux環境用）
         - cd lambda
         - npm run build
-        - zip -r ../incident-report-api-dev.zip index.js package.json node_modules -x "*.git*" "*.DS_Store*"
+        - zip -j ../incident-report-api-dev.zip index.js
         - cd ..
 
         # AWS CLIでLambda関数を更新（環境変数で制御）
