@@ -82,8 +82,8 @@ const inputClasses = computed(() => {
   const countPadding = props.maxlength && props.showCount ? 'pr-16' : 'pr-3';
 
   const stateClasses = props.error
-    ? 'border border-red-300 placeholder:text-red-300 focus:outline-none focus:border-red-500 text-red-900 dark:border-red-500 dark:placeholder:text-red-400 dark:focus:border-red-400 dark:text-red-400'
-    : 'border border-gray-300 placeholder:text-gray-400 focus:outline-none focus:border-emerald-400 text-gray-900 dark:bg-gray-800 dark:border-gray-600 dark:placeholder:text-gray-400 dark:focus:border-emerald-500 dark:text-white';
+    ? 'border border-red-300 placeholder:text-red-300 focus:outline-none focus:border-red-500 text-red-900 bg-white dark:bg-white dark:border-red-500 dark:placeholder:text-red-400 dark:focus:border-red-400 dark:text-red-900'
+    : 'border border-gray-300 placeholder:text-gray-400 focus:outline-none focus:border-emerald-400 text-gray-900 bg-white dark:bg-white dark:border-gray-300 dark:placeholder:text-gray-400 dark:focus:border-emerald-400 dark:text-gray-900';
 
   return [baseClasses, iconPadding, countPadding, stateClasses].join(' ');
 });

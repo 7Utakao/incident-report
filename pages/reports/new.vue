@@ -23,7 +23,7 @@
             <textarea
               v-model="initialContent"
               rows="6"
-              class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 resize-none"
+              class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 resize-none bg-white dark:bg-white dark:border-slate-200 dark:text-gray-900"
               placeholder="例：会議資料を別の取引先へ誤送信。すぐに連絡・回収依頼を行い影響調査中。原因は宛先オートコンプリートの選択ミス。"
             ></textarea>
             <p class="mt-2 text-xs text-slate-500">※ 入力内容は後から自由に編集できます。</p>
@@ -91,7 +91,7 @@
               <textarea
                 v-model="report.content"
                 rows="5"
-                class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 resize-none"
+                class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 resize-none bg-white dark:bg-white dark:border-slate-200 dark:text-gray-900"
                 placeholder="経緯・影響・対応などを簡潔に"
               ></textarea>
             </div>
@@ -102,7 +102,7 @@
               <textarea
                 v-model="report.improvements"
                 rows="5"
-                class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 resize-none"
+                class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 resize-none bg-white dark:bg-white dark:border-slate-200 dark:text-gray-900"
                 placeholder="宛先は最後に入力するルール化、ダブルチェックを運用に組み込む など"
               ></textarea>
             </div>
