@@ -5,30 +5,32 @@ backend:
       commands:
         - set -e
         - cd lambda
-        - node -v && npm -v
+        - echo "== Node & npm ==" && node -v && npm -v
         - npm ci
         - npm run build
-        - ls -lh index.js
+        - echo "== Built file ==" && ls -lh index.js
         - zip -9 -j function.zip index.js
-        - ls -lh function.zip
-        - unzip -l function.zip | head -n 10 || true
+        - echo "== Zip done ==" && ls -lh function.zip && unzip -l function.zip | head -n 20
+        - echo "== Who am I ==" && aws sts get-caller-identity
+        - test -n "$AWS_REGION" || (echo "AWS_REGION is empty" && exit 1)
+        - test -n "$LAMBDA_NAME" || (echo "LAMBDA_NAME is empty" && exit 1)
         - aws lambda update-function-code \
-          --function-name $LAMBDA_NAME \
+          --function-name "$LAMBDA_NAME" \
           --zip-file fileb://function.zip \
-          --region $AWS_REGION
+          --region "$AWS_REGION"
 
         # Lambda環境変数の更新
         - |
           if [ "$AWS_BRANCH" = "main" ]; then
             aws lambda update-function-configuration \
-              --function-name $LAMBDA_NAME \
+              --function-name "$LAMBDA_NAME" \
               --environment Variables="{AI_MODE=$AI_MODE,DDB_REPORTS=$DDB_REPORTS,BEDROCK_REGION=$BEDROCK_REGION,BEDROCK_MODEL_ID=$BEDROCK_MODEL_ID}" \
-              --region $AWS_REGION
+              --region "$AWS_REGION"
           elif [ "$AWS_BRANCH" = "develop" ]; then
             aws lambda update-function-configuration \
               --function-name incident-report-api-dev-staging \
               --environment Variables="{AI_MODE=$AI_MODE_STAGING,DDB_REPORTS=$DDB_REPORTS_STAGING,BEDROCK_REGION=$BEDROCK_REGION,BEDROCK_MODEL_ID=$BEDROCK_MODEL_ID}" \
-              --region $AWS_REGION
+              --region "$AWS_REGION"
           fi
 
 frontend:
