@@ -82,12 +82,10 @@ export const handler = async (
 
       return createErrorResponse(404, 'NotFound', `Route not found: ${method} ${path}`);
     } catch (error) {
-      console.error('Route handling error:', error);
       return createErrorResponse(500, 'InternalError', 'Internal server error');
     }
   } catch (criticalError) {
     // Critical error handler - ensures we always return valid JSON
-    console.error('CRITICAL ERROR - Top level catch:', criticalError);
 
     // Fallback response to prevent 502 Bad Gateway
     return {

@@ -297,6 +297,12 @@ export const CATEGORIES: Record<string, Category> = {
     description: 'システムの監視や異常検知が不十分だった',
     group: 'プロセス・手順関連',
   },
+  WHY_PRC_009: {
+    code: 'WHY_PRC_009',
+    displayName: 'データ品質管理不備',
+    description: 'データの品質管理や検証プロセスに問題があった',
+    group: 'プロセス・手順関連',
+  },
   WHY_PRC_010: {
     code: 'WHY_PRC_010',
     displayName: 'セキュリティ/PII取り扱いの不備',
@@ -543,6 +549,7 @@ export function getCategoryColorClasses(code: string): { bg: string; text: strin
     WHY_PRC_006: { bg: 'bg-rose-200', text: 'text-rose-800' }, // RAGの更新フロー不備 → ローズ系
     WHY_PRC_007: { bg: 'bg-slate-200', text: 'text-slate-800' }, // キー/権限管理の不備 → スレート系
     WHY_PRC_008: { bg: 'bg-teal-200', text: 'text-teal-800' }, // モニタリング不足 → ティール系
+    WHY_PRC_009: { bg: 'bg-cyan-200', text: 'text-cyan-800' }, // データ品質管理不備 → シアン系
     WHY_PRC_010: { bg: 'bg-red-200', text: 'text-red-800' }, // セキュリティ/PII取り扱いの不備 → 赤系
     WHY_COM_001: { bg: 'bg-lime-200', text: 'text-lime-800' }, // #ecfccb / #3f6212
     WHY_COM_002: { bg: 'bg-green-200', text: 'text-green-800' }, // #dcfce7 / #166534

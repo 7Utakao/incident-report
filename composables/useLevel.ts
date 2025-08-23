@@ -105,23 +105,24 @@ export function checkLevelUp(oldXp: number, newXp: number): boolean {
 }
 
 /**
- * 当日レベルアップしたかチェック
+ * 当日レベルアップしたかチェック（真のレベルアップのみ検知）
  */
 export function checkTodayLevelUp(storageKey: string, currentXp: number): boolean {
   if (typeof window === 'undefined') return false;
 
   const today = new Date().toDateString();
   const stored = localStorage.getItem(storageKey);
+  const currentLevel = calculateLevel(currentXp);
 
   if (!stored) {
     // 初回アクセス時は現在のレベルを保存
-    const currentLevel = calculateLevel(currentXp);
     localStorage.setItem(
       storageKey,
       JSON.stringify({
         date: today,
         level: currentLevel.level,
         xp: currentXp,
+        levelUpShown: false,
       }),
     );
     return false;
@@ -132,30 +133,50 @@ export function checkTodayLevelUp(storageKey: string, currentXp: number): boolea
 
     // 日付が変わった場合は更新
     if (data.date !== today) {
-      const currentLevel = calculateLevel(currentXp);
       localStorage.setItem(
         storageKey,
         JSON.stringify({
           date: today,
           level: currentLevel.level,
           xp: currentXp,
+          levelUpShown: false,
         }),
       );
       return false;
     }
 
-    // 当日内でレベルアップしたかチェック
-    const oldLevel = calculateLevel(data.xp).level;
-    const currentLevel = calculateLevel(currentXp).level;
+    // 既にレベルアップメッセージを表示済みの場合は false
+    if (data.levelUpShown) {
+      // XPが増えていれば更新（レベルアップフラグは維持）
+      if (currentXp > data.xp) {
+        localStorage.setItem(
+          storageKey,
+          JSON.stringify({
+            date: today,
+            level: currentLevel.level,
+            xp: currentXp,
+            levelUpShown: true,
+          }),
+        );
+      }
+      return false;
+    }
 
-    if (currentLevel > oldLevel) {
-      // レベルアップした場合は保存データを更新
+    // 真のレベルアップ検知：
+    // 1. レベルが上がっている
+    // 2. 前回のXPと現在のXPでレベルが変わった瞬間
+    const oldLevel = calculateLevel(data.xp).level;
+    const hasLeveledUp = currentLevel.level > oldLevel;
+
+    if (hasLeveledUp) {
+      // レベルアップした場合は保存データを更新し、フラグを立てる
       localStorage.setItem(
         storageKey,
         JSON.stringify({
           date: today,
-          level: currentLevel,
+          level: currentLevel.level,
           xp: currentXp,
+          levelUpShown: true,
         }),
       );
       return true;
@@ -167,8 +188,9 @@ export function checkTodayLevelUp(storageKey: string, currentXp: number): boolea
         storageKey,
         JSON.stringify({
           date: today,
-          level: data.level,
+          level: currentLevel.level,
           xp: currentXp,
+          levelUpShown: false,
         }),
       );
     }

@@ -17,7 +17,6 @@ export async function handleValidateReport(
 
     return createResponse(200, validationResult);
   } catch (error) {
-    console.error('Error in report validation:', error);
     return createErrorResponse(500, 'InternalError', 'Failed to validate report');
   }
 }
