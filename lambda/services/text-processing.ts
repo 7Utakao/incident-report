@@ -38,8 +38,6 @@ export async function preprocessText(
     };
   }
 
-  console.log(`Processing long text: ${originalLength} characters`);
-
   // Long text - apply map-reduce preprocessing
   const chunks = splitIntoChunks(text, config.chunkSize, config.chunkOverlap);
   const summaries = await Promise.all(chunks.map((chunk) => summarizeChunk(chunk)));

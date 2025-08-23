@@ -254,8 +254,6 @@ ${categoryExamples}
 export async function generateAIReport(content: string): Promise<AIResponse> {
   const provider = process.env.AI_PROVIDER || 'bedrock';
 
-  console.log(`Using AI provider: ${provider}`);
-
   switch (provider) {
     case 'bedrock':
       return await generateWithBedrock(content);

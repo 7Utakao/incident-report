@@ -33,13 +33,11 @@ export async function handleAiGenerate(
 
     // Log concurrency status
     const status = aiConcurrencyLimiter.getStatus();
-    console.log(`AI Concurrency Status: ${JSON.stringify(status)}`);
 
     // Execute with concurrency control and retry logic
     const aiResult = await withConcurrencyControl(async () => {
       // Preprocess text if needed
       const processedText = await preprocessText(validatedData.content);
-      console.log(`Text processing: ${getProcessingStats(processedText)}`);
 
       // Execute AI generation with retry
       return await withRetry(
