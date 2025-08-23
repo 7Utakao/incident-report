@@ -45,7 +45,6 @@ export async function withRetry<T>(
 
       // Calculate delay with exponential backoff and jitter
       const delay = calculateDelay(attempt, config);
-      console.log(`Retry attempt ${attempt + 1}/${config.maxRetries} after ${delay}ms`);
 
       await sleep(delay);
     }
