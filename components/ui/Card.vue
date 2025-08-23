@@ -1,7 +1,7 @@
 <template>
   <div
     :class="[
-      'rounded-card shadow-elev bg-surface border border-primary/20',
+      'rounded-card shadow-elev bg-surface border border-gray-200',
       paddingClass,
       hoverClass,
       clickableClass,
@@ -10,7 +10,7 @@
     @click="handleClick"
   >
     <!-- Header -->
-    <div v-if="$slots.header || title" class="border-b border-primary/20 pb-4 mb-4">
+    <div v-if="$slots.header || title" class="border-b border-gray-200 pb-4 mb-4">
       <slot name="header">
         <div class="flex items-center justify-between">
           <h3 v-if="title" class="text-lg font-semibold text-ink">
@@ -32,7 +32,7 @@
     </div>
 
     <!-- Footer -->
-    <div v-if="$slots.footer" class="border-t border-primary/20 pt-4 mt-4">
+    <div v-if="$slots.footer" class="border-t border-gray-200 pt-4 mt-4">
       <slot name="footer" />
     </div>
   </div>

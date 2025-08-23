@@ -36,15 +36,19 @@ export function apiToDynamo(
   reportId: string,
   userId: string,
 ): ReportItem {
+  const createdAt = report.createdAt || new Date().toISOString();
+  const category = report.category!;
+
   return {
+    // Primary Key (existing table structure)
     ReportId: reportId,
     UserId: userId,
     Title: report.title,
     Body: report.body!,
     Summary: report.summary,
     Tags: report.tags,
-    Category: report.category!,
-    CreatedAt: report.createdAt || new Date().toISOString(),
+    Category: category,
+    CreatedAt: createdAt,
     Improvements: report.improvements,
   };
 }
@@ -70,6 +74,10 @@ export async function createReport(reportItem: ReportItem): Promise<void> {
 }
 
 export async function getReport(reportId: string): Promise<ReportItem | null> {
+  console.log('🔍 getReport 開始');
+  console.log('取得するレポートID:', reportId);
+  console.log('テーブル名:', DDB_REPORTS);
+
   const command = new GetCommand({
     TableName: DDB_REPORTS,
     Key: {
@@ -77,7 +85,23 @@ export async function getReport(reportId: string): Promise<ReportItem | null> {
     },
   });
 
+  console.log('実行するGetCommand:', {
+    tableName: command.input.TableName,
+    key: command.input.Key,
+  });
+
   const result = await docClient.send(command);
+  console.log('✅ GetCommand実行結果:', {
+    item: result.Item
+      ? {
+          ReportId: result.Item.ReportId,
+          Title: result.Item.Title,
+          Category: result.Item.Category,
+          CreatedAt: result.Item.CreatedAt,
+        }
+      : null,
+  });
+
   return (result.Item as ReportItem) || null;
 }
 
@@ -111,17 +135,31 @@ export async function queryReports(params: {
     }
   }
 
-  // Use GSI if category and date range are specified
-  if (category && from && to) {
+  // Use existing Category-CreatedAt-Index for category-based queries
+  if (category) {
+    let keyConditionExpression = 'Category = :category';
+    const expressionAttributeValues: any = {
+      ':category': category,
+    };
+
+    // Add date range if specified
+    if (from && to) {
+      keyConditionExpression += ' AND CreatedAt BETWEEN :from AND :to';
+      expressionAttributeValues[':from'] = from;
+      expressionAttributeValues[':to'] = to;
+    } else if (from) {
+      keyConditionExpression += ' AND CreatedAt >= :from';
+      expressionAttributeValues[':from'] = from;
+    } else if (to) {
+      keyConditionExpression += ' AND CreatedAt <= :to';
+      expressionAttributeValues[':to'] = to;
+    }
+
     command = new QueryCommand({
       TableName: DDB_REPORTS,
       IndexName: 'Category-CreatedAt-Index',
-      KeyConditionExpression: 'Category = :category AND CreatedAt BETWEEN :from AND :to',
-      ExpressionAttributeValues: {
-        ':category': category,
-        ':from': from,
-        ':to': to,
-      },
+      KeyConditionExpression: keyConditionExpression,
+      ExpressionAttributeValues: expressionAttributeValues,
       ScanIndexForward: false, // Descending order (newest first)
       Limit: queryLimit,
       ExclusiveStartKey: exclusiveStartKey,

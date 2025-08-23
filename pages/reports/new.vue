@@ -6,12 +6,14 @@
         <div class="flex items-center space-x-4 mb-4">
           <Button variant="ghost" @click="handleBack"> ← 戻る </Button>
         </div>
-        <h1 class="text-3xl font-bold text-secondary">新しい報告を作成</h1>
-        <p class="mt-2 text-gray">{{ COPY.newGuidance }}</p>
+        <h1 class="text-2xl font-bold text-secondary">新しい報告を作成</h1>
+        <p class="mt-2 text-gray">
+          つまずき・気づきを入力しましょう。AIがタイトル・カテゴリ・改善案を提案します。
+        </p>
       </div>
 
       <!-- Single Page Form -->
-      <Card title="インシデント報告">
+      <Card>
         <div class="space-y-6">
           <!-- Original Content Input -->
           <div>
@@ -20,27 +22,39 @@
             </label>
             <textarea
               v-model="initialContent"
-              rows="8"
-              class="w-full px-3 py-2 border border-gray-300 rounded-token-md focus-ring resize-none"
-              placeholder="メール送信時の確認不足により、宛先を間違えて送信してしまいました。今後は送信前に宛先を二重チェックする仕組みを作りたいと思います。具体的には..."
+              rows="6"
+              class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 resize-none"
+              placeholder="例：会議資料を別の取引先へ誤送信。すぐに連絡・回収依頼を行い影響調査中。原因は宛先オートコンプリートの選択ミス。"
             ></textarea>
-            <p class="mt-2 text-sm text-gray">
-              発生した問題の詳細をできるだけ具体的に記述してください。AIが自動的にタイトル、カテゴリ、改善案を生成します。
-            </p>
+            <p class="mt-2 text-xs text-slate-500">※ 入力内容は後から自由に編集できます。</p>
           </div>
 
           <!-- AI Generate Button -->
           <div class="mt-2 flex justify-end">
-            <Button
-              variant="primary"
+            <button
+              type="button"
               :disabled="!initialContent.trim() || generating"
-              :loading="generating"
               @click="generateReport"
-              class="px-8 py-3"
+              class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 text-white px-3 py-2 text-sm hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
+              <svg
+                v-if="!generating"
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M5 8h14M7 12h10M9 16h6" />
+              </svg>
+              <div
+                v-if="generating"
+                class="animate-spin rounded-full h-4 w-4 border-b-2 border-current"
+              ></div>
               <span v-if="generating">AI生成中...</span>
-              <span v-else>AI生成</span>
-            </Button>
+              <span v-else>AI提案</span>
+            </button>
           </div>
 
           <!-- Generated Form Fields -->
@@ -76,9 +90,9 @@
               <label class="block text-sm font-medium text-secondary mb-2"> 内容 </label>
               <textarea
                 v-model="report.content"
-                rows="8"
-                class="w-full px-3 py-2 border border-gray-300 rounded-token-md focus-ring resize-none"
-                placeholder="AI生成後に内容が表示されます"
+                rows="5"
+                class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 resize-none"
+                placeholder="経緯・影響・対応などを簡潔に"
               ></textarea>
             </div>
 
@@ -87,9 +101,9 @@
               <label class="block text-sm font-medium text-secondary mb-2"> 改善案 </label>
               <textarea
                 v-model="report.improvements"
-                rows="6"
-                class="w-full px-3 py-2 border border-gray-300 rounded-token-md focus-ring resize-none"
-                placeholder="AI生成後に改善案が表示されます"
+                rows="5"
+                class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 resize-none"
+                placeholder="宛先は最後に入力するルール化、ダブルチェックを運用に組み込む など"
               ></textarea>
             </div>
           </div>
@@ -121,7 +135,7 @@
         </div>
 
         <template #actions>
-          <div class="flex justify-center space-x-3">
+          <div class="!flex !justify-between !items-center !w-full !grid-cols-none !gap-0">
             <Button variant="secondary" @click="createAnother"> 新しい報告を作成 </Button>
             <Button variant="primary" @click="goToReportsList"> 報告一覧へ </Button>
           </div>
@@ -181,6 +195,8 @@ const generating = ref(false);
 const submitting = ref(false);
 const showSuccessDialog = ref(false);
 const showConfirmDialog = ref(false);
+const showValidationDialog = ref(false);
+const validationResult = ref<any>(null);
 let pendingNavigation: {
   to: any;
   from: any;
@@ -318,6 +334,52 @@ const generateReport = async () => {
 const submitReport = async () => {
   try {
     submitting.value = true;
+
+    console.log('🔍 投稿前バリデーション開始');
+
+    // 投稿前バリデーション
+    const { validate } = useApi();
+    const validationData = {
+      title: report.value.title,
+      category: report.value.category,
+      occurredAt: report.value.occurredAt,
+      content: report.value.content,
+      improvements: report.value.improvements,
+    };
+
+    const validation = await validate.report(validationData);
+    console.log('📋 バリデーション結果:', validation);
+
+    // エラーがある場合は投稿をブロック
+    if (!validation.valid) {
+      alert(`投稿できません:\n${validation.errors.join('\n')}`);
+      return;
+    }
+
+    // 警告がある場合は確認ダイアログを表示
+    if (validation.warnings.length > 0 || validation.suggestedReplacements.length > 0) {
+      let warningMessage = '以下の問題が検出されました:\n\n';
+
+      if (validation.warnings.length > 0) {
+        warningMessage += '⚠️ 警告:\n' + validation.warnings.join('\n') + '\n\n';
+      }
+
+      if (validation.suggestedReplacements.length > 0) {
+        warningMessage += '🔍 検出された情報:\n';
+        validation.suggestedReplacements.forEach((replacement: any) => {
+          warningMessage += `- "${replacement.original}" → "${replacement.suggested}"\n`;
+        });
+        warningMessage += '\n';
+      }
+
+      warningMessage += 'このまま投稿しますか？';
+
+      if (!confirm(warningMessage)) {
+        return;
+      }
+    }
+
+    console.log('✅ バリデーション通過、投稿処理開始');
 
     // デバッグログ: 送信データを確認
     const submitData = {

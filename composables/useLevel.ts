@@ -31,18 +31,35 @@ export interface LevelInfo {
 export function calculateLevel(xp: number): LevelInfo {
   let level = 1;
   let accumulatedXp = 0;
-  let stepIndex = 0;
 
   // 現在のレベルを計算
-  while (stepIndex < STEP_NEED.length && xp >= accumulatedXp + STEP_NEED[stepIndex]) {
-    accumulatedXp += STEP_NEED[stepIndex];
-    stepIndex++;
+  for (let i = 0; i < STEP_NEED.length; i++) {
+    const stepNeed = STEP_NEED[i];
+    if (stepNeed && xp < accumulatedXp + stepNeed) {
+      // このレベルの範囲内にいる
+      break;
+    }
+    accumulatedXp += stepNeed || 0;
     level++;
   }
 
+  // 最大レベルに達している場合
+  if (level > STEP_NEED.length) {
+    level = STEP_NEED.length + 1;
+    const name = LEVEL_NAMES[Math.min(level - 1, LEVEL_NAMES.length - 1)] || 'マスター';
+    return {
+      level,
+      name,
+      progress: 100,
+      remaining: 0,
+      currentXp: xp,
+      nextLevelXp: xp,
+    };
+  }
+
   // 次のレベルに必要なXP
-  const nextStepNeed =
-    stepIndex < STEP_NEED.length ? STEP_NEED[stepIndex] : STEP_NEED[STEP_NEED.length - 1];
+  const stepIndex = level - 1;
+  const nextStepNeed = stepIndex < STEP_NEED.length ? STEP_NEED[stepIndex] || 0 : 0;
   const currentLevelXp = xp - accumulatedXp;
   const remaining = Math.max(0, nextStepNeed - currentLevelXp);
   const progress =

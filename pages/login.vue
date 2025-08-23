@@ -81,7 +81,7 @@
             variant="primary"
             class="w-full"
             :loading="loading"
-            :disabled="!username || !password || loading"
+            :disabled="loading"
           >
             <span v-if="loading">ログイン中...</span>
             <span v-else>ログイン</span>

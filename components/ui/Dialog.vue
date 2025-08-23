@@ -54,10 +54,7 @@
                 </div>
               </div>
 
-              <div
-                v-if="$slots.actions"
-                class="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3"
-              >
+              <div v-if="$slots.actions" class="mt-5 sm:mt-6">
                 <slot name="actions" />
               </div>
             </DialogPanel>

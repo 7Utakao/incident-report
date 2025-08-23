@@ -59,7 +59,7 @@
               class="inline-flex w-28 shrink-0 justify-center rounded-full text-[11px] px-2 py-1 whitespace-nowrap overflow-hidden text-ellipsis"
               :class="getCategoryColor(report.category)"
             >
-              {{ report.category || '—' }}
+              {{ getCategoryDisplayName(report.category) || '—' }}
             </span>
             <div class="min-w-0">
               <div class="font-medium truncate">{{ report.title || '（無題）' }}</div>
@@ -78,6 +78,7 @@ import { ref, computed, onMounted } from 'vue';
 import { format } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import { calculateLevel, checkTodayLevelUp } from '~/composables/useLevel';
+import { getCategoryDisplayName, getCategoryColorClasses } from '~/constants/categories';
 
 // Components
 import Skeleton from '~/components/ui/Skeleton.vue';
@@ -123,23 +124,8 @@ const backgroundStyle = computed(() => ({
 
 // Methods
 const getCategoryColor = (category: string) => {
-  const colorMap = [
-    { bg: 'bg-emerald-50', text: 'text-emerald-700' },
-    { bg: 'bg-amber-50', text: 'text-amber-700' },
-    { bg: 'bg-rose-50', text: 'text-rose-700' },
-    { bg: 'bg-sky-50', text: 'text-sky-700' },
-    { bg: 'bg-lime-50', text: 'text-lime-700' },
-    { bg: 'bg-violet-50', text: 'text-violet-700' },
-  ];
-
-  // 簡易ハッシュで安定色
-  let hash = 0;
-  const str = String(category || '');
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash * 31 + str.charCodeAt(i)) >>> 0;
-  }
-  const color = colorMap[hash % colorMap.length] || colorMap[0];
-  return `${color.bg} ${color.text}`;
+  const colors = getCategoryColorClasses(category);
+  return `${colors.bg} ${colors.text}`;
 };
 
 const formatDate = (dateString: string) => {
@@ -160,7 +146,7 @@ const fetchData = async () => {
     console.log('🔍 ホーム画面データ取得開始');
 
     // 並列でデータを取得
-    const [allStatsRes, todayStatsRes, recentRes] = await Promise.all([
+    const [allStatsRes, todayStatsRes, userStatsRes, recentRes] = await Promise.all([
       // 全体の統計
       api.stats.categories({ scope: 'all' }),
       // 今日の統計（scopeの型エラーを回避するため、直接APIコールを使用）
@@ -168,6 +154,8 @@ const fetchData = async () => {
         method: 'GET',
         query: { scope: 'today', tz: 'Asia/Tokyo' },
       }),
+      // 個人の統計
+      api.stats.categories({ scope: 'user' }),
       // 最近の報告5件（limitパラメータを削除し、後でsliceで制限）
       api.reports.list(),
     ]);
@@ -175,20 +163,18 @@ const fetchData = async () => {
     console.log('📊 API取得結果:');
     console.log('- 全体統計:', allStatsRes);
     console.log('- 今日統計:', todayStatsRes);
+    console.log('- 個人統計:', userStatsRes);
     console.log('- 最近の報告:', recentRes);
 
     // データの設定
     totalCount.value = allStatsRes.totalReports || 0;
     todayCount.value = (todayStatsRes as any).totalReports || 0;
-
-    // 個人の報告数を取得（最近の報告から推定、または固定値を使用）
-    // TODO: 個人専用のAPIエンドポイントが実装されたら修正
-    meCount.value = Math.floor(totalCount.value * 0.1) || 5; // 暫定的に全体の10%または5件
+    meCount.value = userStatsRes.totalReports || 0; // 実際のユーザーの報告数を動的に取得
 
     console.log('📈 設定された値:');
     console.log(`- 総報告数: ${totalCount.value}`);
     console.log(`- 今日の報告数: ${todayCount.value}`);
-    console.log(`- 個人報告数: ${meCount.value} (暫定値)`);
+    console.log(`- 個人報告数: ${meCount.value} (動的取得)`);
 
     // レベル計算結果をログ出力
     const orgLevelInfo = calculateLevel(totalCount.value);

@@ -1,142 +1,186 @@
 <template>
-  <div class="min-h-screen bg-background">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="min-h-screen bg-slate-50">
+    <div class="max-w-7xl mx-auto px-6 py-8">
       <!-- Header -->
-      <div class="flex justify-between items-center mb-8">
-        <div>
-          <h1 class="text-3xl font-bold text-secondary">{{ COPY.listTitle }}</h1>
-          <p class="mt-2 text-gray">{{ COPY.listSubtitle }}</p>
+      <header class="mb-6">
+        <h1 class="text-2xl font-bold text-slate-900">報告一覧</h1>
+        <p class="text-slate-500 mt-1">報告された内容の検索ができます</p>
+      </header>
+
+      <!-- Filters -->
+      <section class="bg-white rounded-2xl border p-4 md:p-6 mb-6 shadow-sm">
+        <form class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4 items-end">
+          <!-- キーワード検索 -->
+          <label class="relative md:col-span-1 lg:col-span-1">
+            <div class="mt-0 md:mt-[1.375rem] relative">
+              <input
+                v-model="filters.q"
+                type="text"
+                placeholder="タイトルや内容で検索…"
+                class="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 pr-10 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400"
+                @input="handleFilterChange"
+              />
+              <svg
+                class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="m21 21-3.6-3.6" />
+              </svg>
+            </div>
+          </label>
+
+          <!-- カテゴリ選択 -->
+          <label class="relative md:col-span-1 lg:col-span-1">
+            <div class="mt-0 md:mt-[1.375rem] relative">
+              <select
+                v-model="filters.category"
+                class="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 pr-10 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 appearance-none"
+                @change="handleFilterChange"
+              >
+                <option value="">カテゴリを選択</option>
+                <option v-for="option in categoryOptions" :key="option.value" :value="option.value">
+                  {{ option.label }}
+                </option>
+              </select>
+              <svg
+                class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </div>
+          </label>
+
+          <!-- 開始日 -->
+          <label class="relative md:col-span-1 lg:col-span-1">
+            <span class="block text-xs font-medium text-slate-700 mb-1">開始日</span>
+            <input
+              v-model="filters.from"
+              type="date"
+              class="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400"
+              @input="handleFilterChange"
+            />
+          </label>
+
+          <!-- 終了日 -->
+          <label class="relative md:col-span-1 lg:col-span-1">
+            <span class="block text-xs font-medium text-slate-700 mb-1">終了日</span>
+            <input
+              v-model="filters.to"
+              type="date"
+              class="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400"
+              @input="handleFilterChange"
+            />
+          </label>
+
+          <!-- 検索・クリアボタン -->
+          <div class="md:col-span-1 lg:col-span-1">
+            <div class="mt-0 md:mt-[1.375rem] flex gap-2">
+              <button
+                type="button"
+                class="flex-1 rounded-xl bg-emerald-600 text-white px-3 py-2.5 text-sm hover:bg-emerald-700 transition-colors"
+                @click="fetchReports"
+              >
+                検索
+              </button>
+              <button
+                type="button"
+                class="flex-1 rounded-xl bg-white border border-slate-200 text-slate-700 px-3 py-2.5 text-sm hover:bg-slate-50 transition-colors"
+                @click="clearFilters"
+              >
+                クリア
+              </button>
+            </div>
+          </div>
+        </form>
+
+        <div class="mt-3 text-sm text-slate-500">
+          {{ totalReports }} 件中 {{ filteredReports.length }} 件を表示
         </div>
-        <div class="flex space-x-2">
-          <Button variant="secondary" @click="manualRefresh" :loading="loading">
-            {{ loading ? '取得中...' : '手動更新' }}
-          </Button>
-          <Button variant="primary" @click="$router.push('/reports/new')">
-            新しい報告を作成
-          </Button>
+      </section>
+
+      <!-- Loading State -->
+      <div
+        v-if="loading"
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
+      >
+        <div v-for="i in 8" :key="i" class="bg-white rounded-2xl border p-4 animate-pulse">
+          <div class="flex items-start justify-between gap-3 mb-2">
+            <div class="h-4 bg-slate-200 rounded flex-1"></div>
+            <div class="h-6 bg-slate-200 rounded-full w-20"></div>
+          </div>
+          <div class="space-y-2">
+            <div class="h-3 bg-slate-200 rounded"></div>
+            <div class="h-3 bg-slate-200 rounded w-3/4"></div>
+          </div>
+          <div class="mt-3 flex items-center justify-between">
+            <div class="h-3 bg-slate-200 rounded w-24"></div>
+            <div class="h-3 bg-slate-200 rounded w-12"></div>
+          </div>
         </div>
       </div>
 
-      <!-- Filters -->
-      <Card class="mb-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-          <!-- Search Query -->
-          <div>
-            <Input
-              v-model="filters.q"
-              placeholder="タイトルや内容で検索..."
-              @input="handleFilterChange"
-            />
-          </div>
+      <!-- Empty State -->
+      <div v-else-if="filteredReports.length === 0" class="text-center py-12">
+        <div class="text-slate-400 text-lg mb-2">報告が見つかりません</div>
+        <div class="text-slate-500 text-sm">検索条件を変更してお試しください</div>
+      </div>
 
-          <!-- Category Filter -->
-          <div>
-            <Select
-              v-model="filters.category"
-              :options="categoryOptions"
-              placeholder="カテゴリを選択"
-              @update:model-value="handleFilterChange"
-            />
-          </div>
-
-          <!-- Date From -->
-          <div>
-            <Input v-model="filters.from" type="date" label="開始日" @input="handleFilterChange" />
-          </div>
-
-          <!-- Date To -->
-          <div>
-            <Input v-model="filters.to" type="date" label="終了日" @input="handleFilterChange" />
-          </div>
-        </div>
-
-        <!-- Filter Actions -->
-        <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
-          <div class="text-sm text-gray">
-            {{ totalReports }} 件中 {{ filteredReports.length }} 件を表示
-          </div>
-          <div class="flex space-x-2">
-            <Button variant="ghost" size="sm" @click="clearFilters"> フィルタをクリア </Button>
-            <Button variant="secondary" size="sm" @click="exportReports"> 検索 </Button>
-          </div>
-        </div>
-      </Card>
-
-      <!-- Reports Table -->
-      <Card>
-        <Table
-          :columns="tableColumns"
-          :data="paginatedReports"
-          :loading="loading"
-          row-clickable
-          @row-click="handleRowClick"
+      <!-- Cards Grid -->
+      <main
+        v-else
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
+      >
+        <article
+          v-for="report in paginatedReports"
+          :key="report.id"
+          class="bg-white rounded-2xl border p-4 hover:shadow-sm transition-shadow cursor-pointer"
+          @click="handleRowClick(report)"
         >
-          <!-- Custom cell templates -->
-          <template #cell-title="{ item }">
-            <div class="max-w-xs">
-              <div class="font-medium text-secondary truncate">{{ item.title }}</div>
-              <div class="text-sm text-gray truncate">{{ item.summary }}</div>
-            </div>
-          </template>
+          <div class="flex items-start justify-between gap-3">
+            <h3 class="font-semibold text-slate-900 clamp-2">{{ report.title || '（無題）' }}</h3>
+            <span
+              :class="getCategoryColor(report.category)"
+              class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium shrink-0"
+            >
+              {{ getCategoryDisplayName(report.category) }}
+            </span>
+          </div>
+          <p class="mt-2 text-sm text-slate-600 clamp-3">{{ report.summary || '概要なし' }}</p>
+          <div class="mt-3 flex items-center justify-between text-xs text-slate-500">
+            <span>{{ formatDate(report.createdAt) }}</span>
+            <span class="text-emerald-700 hover:underline">詳細</span>
+          </div>
+        </article>
+      </main>
 
-          <template #cell-category="{ item }">
-            <Badge :variant="getCategoryVariant(item.category)">
-              {{ getCategoryDisplayName(item.category) }}
-            </Badge>
-          </template>
-
-          <template #cell-createdAt="{ item }">
-            <div class="text-sm">
-              <div>{{ formatDate(item.createdAt) }}</div>
-              <div class="text-xs text-gray">{{ formatRelativeTime(item.createdAt) }}</div>
-            </div>
-          </template>
-
-          <template #actions="{ item }">
-            <div class="flex space-x-2">
-              <Button variant="ghost" size="sm" @click.stop="$router.push(`/reports/${item.id}`)">
-                詳細
-              </Button>
-              <Button
-                v-if="item.userId === currentUserId"
-                variant="ghost"
-                size="sm"
-                @click.stop="editReport(item)"
-              >
-                編集
-              </Button>
-            </div>
-          </template>
-        </Table>
-
-        <!-- Pagination -->
-        <div v-if="totalPages > 1" class="mt-6">
-          <Pagination
-            :current-page="currentPage"
-            :total-pages="totalPages"
-            :total="filteredReports.length"
-            :per-page="perPage"
-            @page-change="handlePageChange"
-          />
-        </div>
-      </Card>
+      <!-- Pagination -->
+      <div v-if="totalPages > 1" class="mt-8 flex justify-center">
+        <Pagination
+          :current-page="currentPage"
+          :total-pages="totalPages"
+          :total="filteredReports.length"
+          :per-page="perPage"
+          @page-change="handlePageChange"
+        />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
-import { format, formatDistanceToNow } from 'date-fns';
+import { format } from 'date-fns';
 import { ja } from 'date-fns/locale';
-import { COPY } from '~/constants/copy';
 
 // Components
-import Card from '~/components/ui/Card.vue';
-import Button from '~/components/ui/Button.vue';
-import Input from '~/components/ui/Input.vue';
-import Select from '~/components/ui/Select.vue';
-import Table from '~/components/ui/Table.vue';
-import Badge from '~/components/ui/Badge.vue';
 import Pagination from '~/components/ui/Pagination.vue';
 
 // Types
@@ -145,11 +189,7 @@ interface Report {
   title: string;
   summary: string;
   category: string;
-  status: string;
   createdAt: string;
-  updatedAt: string;
-  author: string;
-  userId: string;
 }
 
 interface Filters {
@@ -163,7 +203,7 @@ interface Filters {
 const loading = ref(true);
 const reports = ref<Report[]>([]);
 const currentPage = ref(1);
-const perPage = ref(10);
+const perPage = ref(12);
 
 const filters = ref<Filters>({
   q: '',
@@ -172,32 +212,13 @@ const filters = ref<Filters>({
   to: '',
 });
 
-// デバッグ情報
-const debugInfo = ref({
-  isAuthenticated: false,
-  hasToken: false,
-  lastFetch: '',
-  lastError: '',
-});
-
 // カテゴリオプション
 import {
   getCategoryOptions,
   getCategoryDisplayName,
-  getCategoryVariant,
+  getCategoryColorClasses,
 } from '~/constants/categories';
 const categoryOptions = getCategoryOptions();
-
-// Table columns
-const tableColumns = [
-  { key: 'title', label: 'タイトル', sortable: true },
-  { key: 'category', label: 'カテゴリ', sortable: true },
-  { key: 'author', label: '作成者', sortable: true },
-  { key: 'createdAt', label: '作成日時', sortable: true },
-];
-
-// Mock current user ID for permission check
-const currentUserId = ref('user-123');
 
 // Computed
 const totalReports = computed(() => reports.value.length);
@@ -246,28 +267,18 @@ const paginatedReports = computed(() => {
 });
 
 // Methods
-
-const getStatusVariant = (
-  status: string,
-): 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'outline' => {
-  const variants: Record<
-    string,
-    'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'outline'
-  > = {
-    検討中: 'warning',
-    実施中: 'primary',
-    完了: 'success',
-    保留: 'secondary',
-  };
-  return variants[status] || 'default';
+const getCategoryColor = (category: string) => {
+  const colors = getCategoryColorClasses(category);
+  return `${colors.bg} ${colors.text}`;
 };
 
 const formatDate = (dateString: string) => {
-  return format(new Date(dateString), 'yyyy/MM/dd HH:mm', { locale: ja });
-};
-
-const formatRelativeTime = (dateString: string) => {
-  return formatDistanceToNow(new Date(dateString), { addSuffix: true, locale: ja });
+  if (!dateString) return '';
+  try {
+    return format(new Date(dateString), 'yyyy/MM/dd', { locale: ja });
+  } catch {
+    return '';
+  }
 };
 
 const handleFilterChange = () => {
@@ -282,11 +293,6 @@ const handleRowClick = (report: Report) => {
   navigateTo(`/reports/${report.id}`);
 };
 
-const editReport = (report: Report) => {
-  // TODO: Implement edit functionality
-  console.log('Edit report:', report.id);
-};
-
 const clearFilters = () => {
   filters.value = {
     q: '',
@@ -294,32 +300,18 @@ const clearFilters = () => {
     from: '',
     to: '',
   };
-};
-
-const exportReports = () => {
-  // TODO: Implement export functionality
-  console.log('Export reports');
-};
-
-const manualRefresh = async () => {
-  console.log('🔄 手動更新が実行されました');
-  await fetchReports();
+  handleFilterChange();
 };
 
 const fetchReports = async () => {
   try {
     loading.value = true;
 
-    // デバッグ情報をリセット
-    debugInfo.value.lastError = '';
-    debugInfo.value.lastFetch = new Date().toLocaleString('ja-JP');
-
     // 認証状態の確認
     const { isAuthenticated, getIdToken, checkAuthStatus } = useAuth();
 
     // 認証状態を再確認
     const authStatus = await checkAuthStatus();
-    debugInfo.value.isAuthenticated = authStatus;
 
     if (!authStatus) {
       await navigateTo('/login');
@@ -327,7 +319,6 @@ const fetchReports = async () => {
     }
 
     const token = await getIdToken();
-    debugInfo.value.hasToken = !!token;
 
     if (!token) {
       await navigateTo('/login');
@@ -350,20 +341,13 @@ const fetchReports = async () => {
       return {
         id: item.reportId,
         title: item.title || '無題',
-        summary: item.summary || item.body?.substring(0, 100) + '...' || '',
+        summary: item.summary || item.body?.substring(0, 150) + '...' || '',
         category: item.category,
-        status: '完了', // 現在のAPIには status がないため固定値
-        author: 'ユーザー', // 現在のAPIには author がないため固定値
-        userId: item.userId,
         createdAt: item.createdAt,
-        updatedAt: item.createdAt, // 現在のAPIには updatedAt がないため createdAt を使用
       };
     });
   } catch (error: any) {
     console.error('レポート取得エラー:', error);
-
-    // デバッグ情報にエラーを記録
-    debugInfo.value.lastError = error.message || 'Unknown error';
 
     // エラー時は空配列を設定
     reports.value = [];
@@ -399,13 +383,6 @@ onMounted(() => {
   fetchReports();
 });
 
-// ページがフォーカスされた時にデータを再取得
-if (process.client) {
-  window.addEventListener('focus', () => {
-    fetchReports();
-  });
-}
-
 // Meta
 useHead({
   title: '報告一覧 - 報告システム',
@@ -417,3 +394,19 @@ definePageMeta({
   layout: 'app',
 });
 </script>
+
+<style scoped>
+.clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+</style>

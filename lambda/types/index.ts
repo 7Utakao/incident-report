@@ -1,5 +1,16 @@
 // Types for Lambda function
 export interface ReportItem {
+  // DynamoDB Primary Key (optional for backward compatibility)
+  PK?: string; // REPORT#<reportId>
+  SK?: string; // META
+
+  // GSI Keys (optional)
+  GSI1PK?: string; // Category for category-based queries
+  GSI1SK?: string; // CreatedAt for category-based queries
+  GSI2PK?: string; // "ALL" for global queries
+  GSI2SK?: string; // CreatedAt for global queries
+
+  // Report Data (primary fields for existing table structure)
   ReportId: string;
   UserId: string;
   Title?: string;
