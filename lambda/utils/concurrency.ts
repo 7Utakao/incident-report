@@ -91,7 +91,6 @@ export class ConcurrencyLimiter {
     });
 
     if (this.queue.length < originalLength) {
-      console.log(`Cleaned up ${originalLength - this.queue.length} expired queue items`);
     }
   }
 

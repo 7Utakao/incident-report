@@ -1,0 +1,97 @@
+name: Deploy Lambda Function
+
+on:
+  push:
+    paths:
+      - 'lambda/**'
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: lambda/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd lambda
+          npm ci
+
+      - name: Build Lambda function
+        run: |
+          cd lambda
+          npm run build
+          ls -lh index.js
+
+      - name: Create deployment package
+        run: |
+          cd lambda
+          zip -j function.zip index.js
+          ls -lh function.zip
+          unzip -l function.zip
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Deploy to Lambda
+        run: |
+          cd lambda
+          FUNCTION_NAME="${{ secrets.LAMBDA_FUNCTION_NAME }}"
+          if [ "${{ github.ref }}" = "refs/heads/develop" ]; then
+            FUNCTION_NAME="${{ secrets.LAMBDA_FUNCTION_NAME }}-staging"
+          fi
+
+          echo "Deploying to function: $FUNCTION_NAME"
+          aws lambda update-function-code \
+            --function-name "$FUNCTION_NAME" \
+            --zip-file fileb://function.zip \
+            --region ${{ secrets.AWS_REGION }}
+
+      - name: Update Lambda environment variables
+        run: |
+          FUNCTION_NAME="${{ secrets.LAMBDA_FUNCTION_NAME }}"
+          if [ "${{ github.ref }}" = "refs/heads/develop" ]; then
+            FUNCTION_NAME="${{ secrets.LAMBDA_FUNCTION_NAME }}-staging"
+            AI_MODE="${{ secrets.AI_MODE_STAGING }}"
+            DDB_REPORTS="${{ secrets.DDB_REPORTS_STAGING }}"
+          else
+            AI_MODE="${{ secrets.AI_MODE }}"
+            DDB_REPORTS="${{ secrets.DDB_REPORTS }}"
+          fi
+
+          echo "Updating environment variables for: $FUNCTION_NAME"
+          aws lambda update-function-configuration \
+            --function-name "$FUNCTION_NAME" \
+            --environment Variables="{AI_MODE=$AI_MODE,DDB_REPORTS=$DDB_REPORTS,BEDROCK_REGION=${{ secrets.BEDROCK_REGION }},BEDROCK_MODEL_ID=${{ secrets.BEDROCK_MODEL_ID }}}" \
+            --region ${{ secrets.AWS_REGION }}
+
+      - name: Test Lambda function
+        run: |
+          FUNCTION_NAME="${{ secrets.LAMBDA_FUNCTION_NAME }}"
+          if [ "${{ github.ref }}" = "refs/heads/develop" ]; then
+            FUNCTION_NAME="${{ secrets.LAMBDA_FUNCTION_NAME }}-staging"
+          fi
+
+          echo "Testing function: $FUNCTION_NAME"
+          aws lambda invoke \
+            --function-name "$FUNCTION_NAME" \
+            --payload '{"routeKey":"GET /health","requestContext":{"http":{"method":"GET","path":"/health"}}}' \
+            --region ${{ secrets.AWS_REGION }} \
+            response.json
+          cat response.json
