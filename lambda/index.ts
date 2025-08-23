@@ -13,15 +13,11 @@ export const handler = async (
 ): Promise<APIGatewayProxyResultV2> => {
   // Top-level try/catch to prevent 502 Bad Gateway errors
   try {
-    console.log('Event:', JSON.stringify(event, null, 2));
-
     try {
       // Handle both API Gateway v2 and Lambda Function URL formats
       const method = event.requestContext.http.method;
       const path = event.requestContext.http.path;
       const routeKey = event.routeKey || `${method} ${path}`;
-
-      console.log(`Processing route: ${routeKey}, method: ${method}, path: ${path}`);
 
       // Handle OPTIONS requests for CORS preflight
       if (method === 'OPTIONS') {

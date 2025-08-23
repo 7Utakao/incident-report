@@ -3,9 +3,9 @@ backend:
   phases:
     build:
       commands:
-        # Lambda関数の依存関係インストール
+        # Lambda関数の依存関係インストール（devDependenciesも含める）
         - cd lambda
-        - npm install --production
+        - npm ci
         - cd ..
 
         # Lambda関数のZipファイル作成（Linux環境用）
