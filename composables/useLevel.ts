@@ -104,100 +104,109 @@ export function checkLevelUp(oldXp: number, newXp: number): boolean {
   return newLevel > oldLevel;
 }
 
-/**
- * 当日レベルアップしたかチェック（真のレベルアップのみ検知）
- */
-export function checkTodayLevelUp(storageKey: string, currentXp: number): boolean {
-  if (typeof window === 'undefined') return false;
+// 堅牢なレベルアップ判定のための型定義
+interface LevelState {
+  lastXp: number;
+  lastLevel: number;
+  lastShownLevel?: number;
+  lastShownDate?: string; // 'YYYY-MM-DD'
+}
 
-  const today = new Date().toDateString();
-  const stored = localStorage.getItem(storageKey);
-  const currentLevel = calculateLevel(currentXp);
+// 累積XP閾値テーブルを生成
+function generateThresholds(): number[] {
+  const thresholds = [0]; // レベル1は0XPから
+  let accumulated = 0;
 
-  if (!stored) {
-    // 初回アクセス時は現在のレベルを保存
-    localStorage.setItem(
-      storageKey,
-      JSON.stringify({
-        date: today,
-        level: currentLevel.level,
-        xp: currentXp,
-        levelUpShown: false,
-      }),
-    );
-    return false;
+  for (const stepNeed of STEP_NEED) {
+    if (stepNeed) {
+      accumulated += stepNeed;
+      thresholds.push(accumulated);
+    }
   }
+
+  return thresholds;
+}
+
+const THRESHOLDS = generateThresholds();
+
+/**
+ * XPからレベルを計算（累積閾値ベース）
+ */
+function levelFromXp(xp: number): number {
+  let level = 1;
+  for (let i = 0; i < THRESHOLDS.length; i++) {
+    const threshold = THRESHOLDS[i];
+    if (threshold !== undefined && xp >= threshold) {
+      level = i + 1;
+    } else {
+      break;
+    }
+  }
+  return Math.min(level, LEVEL_NAMES.length);
+}
+
+/**
+ * 今日の日付文字列を取得
+ */
+function todayStr(d = new Date()): string {
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * レベル状態を読み込み
+ */
+function readLevelState(storageKey: string): LevelState {
+  if (typeof window === 'undefined') return { lastXp: 0, lastLevel: 1 };
 
   try {
-    const data = JSON.parse(stored);
-
-    // 日付が変わった場合は更新
-    if (data.date !== today) {
-      localStorage.setItem(
-        storageKey,
-        JSON.stringify({
-          date: today,
-          level: currentLevel.level,
-          xp: currentXp,
-          levelUpShown: false,
-        }),
-      );
-      return false;
-    }
-
-    // 既にレベルアップメッセージを表示済みの場合は false
-    if (data.levelUpShown) {
-      // XPが増えていれば更新（レベルアップフラグは維持）
-      if (currentXp > data.xp) {
-        localStorage.setItem(
-          storageKey,
-          JSON.stringify({
-            date: today,
-            level: currentLevel.level,
-            xp: currentXp,
-            levelUpShown: true,
-          }),
-        );
-      }
-      return false;
-    }
-
-    // 真のレベルアップ検知：
-    // 1. レベルが上がっている
-    // 2. 前回のXPと現在のXPでレベルが変わった瞬間
-    const oldLevel = calculateLevel(data.xp).level;
-    const hasLeveledUp = currentLevel.level > oldLevel;
-
-    if (hasLeveledUp) {
-      // レベルアップした場合は保存データを更新し、フラグを立てる
-      localStorage.setItem(
-        storageKey,
-        JSON.stringify({
-          date: today,
-          level: currentLevel.level,
-          xp: currentXp,
-          levelUpShown: true,
-        }),
-      );
-      return true;
-    }
-
-    // レベルアップしていない場合でもXPが増えていれば更新
-    if (currentXp > data.xp) {
-      localStorage.setItem(
-        storageKey,
-        JSON.stringify({
-          date: today,
-          level: currentLevel.level,
-          xp: currentXp,
-          levelUpShown: false,
-        }),
-      );
-    }
-
-    return false;
-  } catch (error) {
-    console.error('Error checking level up:', error);
-    return false;
+    const raw = localStorage.getItem(storageKey);
+    return raw ? JSON.parse(raw) : { lastXp: 0, lastLevel: 1 };
+  } catch {
+    return { lastXp: 0, lastLevel: 1 };
   }
+}
+
+/**
+ * レベル状態を保存
+ */
+function writeLevelState(storageKey: string, state: LevelState): void {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(storageKey, JSON.stringify(state));
+  }
+}
+
+/**
+ * レベルアップ直後だけ true を返す（1回きり）
+ * 複数件投稿での取りこぼしや重複表示を完全に防止
+ */
+export function checkLevelUpJustNow(storageKey: string, currentXp: number): boolean {
+  const state = readLevelState(storageKey);
+  const prevLevel = state.lastLevel ?? levelFromXp(state.lastXp ?? 0);
+  const currLevel = levelFromXp(currentXp);
+
+  const justLeveled = currLevel > prevLevel;
+  const shownTodaySameLevel =
+    state.lastShownLevel === currLevel && state.lastShownDate === todayStr();
+
+  // 常に最新状態を保存
+  state.lastXp = currentXp;
+  state.lastLevel = currLevel;
+
+  if (justLeveled && !shownTodaySameLevel) {
+    state.lastShownLevel = currLevel;
+    state.lastShownDate = todayStr();
+    writeLevelState(storageKey, state);
+    return true;
+  }
+
+  writeLevelState(storageKey, state);
+  return false;
+}
+
+/**
+ * 当日レベルアップしたかチェック（後方互換性のため残す）
+ * @deprecated checkLevelUpJustNow を使用してください
+ */
+export function checkTodayLevelUp(storageKey: string, currentXp: number): boolean {
+  return checkLevelUpJustNow(storageKey, currentXp);
 }
