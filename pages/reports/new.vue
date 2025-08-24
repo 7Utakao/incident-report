@@ -327,7 +327,8 @@ const submitReport = async () => {
   try {
     submitting.value = true;
 
-    // 投稿前バリデーション
+    // 投稿前バリデーション - 一時的にコメントアウト
+    /*
     const { validate } = useApi();
     const validationData = {
       title: report.value.title,
@@ -367,6 +368,7 @@ const submitReport = async () => {
         return;
       }
     }
+    */
 
     // 送信データを準備
     const submitData = {
