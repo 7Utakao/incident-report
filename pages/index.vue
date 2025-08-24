@@ -187,15 +187,18 @@ const fetchData = async () => {
       `- 個人レベル: Lv${meLevelInfo.level} ${meLevelInfo.name} (残り${meLevelInfo.remaining}件)`,
     );
 
-    // 最近の報告の変換（5件に制限）
+    // 最近の報告の変換（投稿日降順でソートしてから5件に制限）
     const reports = recentRes.items || [];
-    recentReports.value = reports.slice(0, 5).map((report: any) => ({
-      id: report.reportId || report.id,
-      title: report.title || report.summary || '（無題）',
-      summary: report.summary || report.body || '',
-      category: report.category || '—',
-      createdAt: report.createdAt || '',
-    }));
+    recentReports.value = reports
+      .sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime()) // 降順ソート
+      .slice(0, 5)
+      .map((report: any) => ({
+        id: report.reportId || report.id,
+        title: report.title || report.summary || '（無題）',
+        summary: report.summary || report.body || '',
+        category: report.category || '—',
+        createdAt: report.createdAt || '',
+      }));
 
     console.log(`📝 最近の報告: ${recentReports.value.length}件取得`);
   } catch (error) {
