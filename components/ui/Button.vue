@@ -55,7 +55,7 @@ const buttonClasses = computed(() => {
     danger:
       'bg-accent2 hover:bg-accent2/90 text-white focus:ring-accent2 dark:bg-accent2 dark:hover:bg-accent2/90',
     ghost:
-      'hover:bg-primary/10 text-ink focus:ring-primary dark:hover:bg-primary/10 dark:text-white',
+      'hover:bg-primary/10 text-ink focus:ring-primary dark:hover:bg-primary/10 dark:text-gray-900',
   };
 
   const sizeClasses = {
