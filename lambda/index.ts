@@ -21,7 +21,7 @@ export const handler = async (
 
       // Handle OPTIONS requests for CORS preflight
       if (method === 'OPTIONS') {
-        return createOptionsResponse();
+        return createOptionsResponse(event.headers?.origin);
       }
 
       // For Lambda Function URL, routeKey is always "$default", so we need to route based on method and path

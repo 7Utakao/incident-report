@@ -7,6 +7,7 @@ import {
   ScanCommand,
 } from '@aws-sdk/lib-dynamodb';
 import type { ReportItem, ApiReport } from '../types';
+import { logger } from '../utils/logger';
 
 // Environment variables
 const DDB_REPORTS = process.env.DDB_REPORTS || 'incident-report-Reports-dev';
@@ -94,7 +95,10 @@ export async function queryReports(params: {
     try {
       exclusiveStartKey = JSON.parse(Buffer.from(nextToken, 'base64').toString());
     } catch (error) {
-      console.error('❌ NextToken デコードエラー:', error);
+      logger.error('NextToken decode error', {
+        error: error instanceof Error ? error.message : String(error),
+        nextToken,
+      });
       throw new Error('Invalid nextToken');
     }
   }

@@ -3,6 +3,7 @@ import { createResponse, createErrorResponse } from '../utils/response';
 import { getUserId } from '../utils/auth';
 import { queryReports } from '../services/dynamodb';
 import { getCategoryDisplayName } from '../constants/categories';
+import { logger } from '../utils/logger';
 
 interface CategoryStat {
   code: string;
@@ -22,15 +23,18 @@ interface StatsResponse {
 }
 
 export async function getStats(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> {
+  let userId: string | null = null;
+  let scope = 'all';
+
   try {
     // JWT認証
-    const userId = await getUserId(event);
+    userId = await getUserId(event);
     if (!userId) {
       return createErrorResponse(401, 'UNAUTHORIZED', 'Authentication required');
     }
 
     // クエリパラメータの取得
-    const scope = event.queryStringParameters?.scope || 'all';
+    scope = event.queryStringParameters?.scope || 'all';
     const topN = parseInt(event.queryStringParameters?.topN || '10');
     const tz = event.queryStringParameters?.tz || 'Asia/Tokyo';
 
@@ -121,7 +125,11 @@ export async function getStats(event: APIGatewayProxyEventV2): Promise<APIGatewa
 
     return createResponse(200, response);
   } catch (error) {
-    console.error('Stats API error:', error);
+    logger.error('Stats API error', {
+      error: error instanceof Error ? error.message : String(error),
+      userId,
+      scope,
+    });
     return createErrorResponse(500, 'INTERNAL_ERROR', 'Internal server error');
   }
 }

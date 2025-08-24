@@ -4,8 +4,9 @@
   "description": "Lambda function for incident report API",
   "main": "index.js",
   "scripts": {
-    "build": "esbuild index.ts --bundle --platform=node --target=node22 --format=cjs --outfile=index.js",
-    "zip": "npm run build && zip -r function.zip index.js"
+    "build": "esbuild index.ts --bundle --platform=node --target=node20 --format=cjs --outfile=index.js",
+    "zip": "powershell -NoProfile -Command \"Compress-Archive -Path index.js -DestinationPath function.zip -Force\"",
+    "deploy": "npm run build && npm run zip && aws lambda update-function-code --function-name incident-report-api-dev --zip-file fileb://function.zip --region ap-northeast-1"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.490.0",
