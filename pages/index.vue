@@ -77,7 +77,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { format } from 'date-fns';
 import { ja } from 'date-fns/locale';
-import { calculateLevel, checkTodayLevelUp } from '~/composables/useLevel';
+import { calculateLevel, checkLevelUpJustNow } from '~/composables/useLevel';
 import { getCategoryDisplayName, getCategoryColorClasses } from '~/constants/categories';
 
 // Components
@@ -112,8 +112,8 @@ const meRemaining = computed(() => meLevel.value.remaining);
 
 // Level up detection
 const isLeveledUpToday = computed(() => {
-  const orgLeveledUp = checkTodayLevelUp('level.org', totalCount.value);
-  const meLeveledUp = checkTodayLevelUp('level.me', meCount.value);
+  const orgLeveledUp = checkLevelUpJustNow('level.org', totalCount.value);
+  const meLeveledUp = checkLevelUpJustNow('level.me', meCount.value);
   return orgLeveledUp || meLeveledUp;
 });
 
