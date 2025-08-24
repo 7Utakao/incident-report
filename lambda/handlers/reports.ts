@@ -11,12 +11,15 @@ import {
   dynamoToApi,
   apiToDynamo,
 } from '../services/dynamodb';
+import { logger } from '../utils/logger';
 
 export async function handleCreateReport(
   event: APIGatewayProxyEventV2,
 ): Promise<APIGatewayProxyResultV2> {
+  let userId: string | null = null;
+
   try {
-    const userId = await getUserId(event);
+    userId = await getUserId(event);
     if (!userId) {
       return createErrorResponse(401, 'Unauthorized', 'Valid JWT token required');
     }
@@ -31,14 +34,20 @@ export async function handleCreateReport(
     return createResponse(201, { reportId });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      console.error('❌ バリデーションエラー:', error.issues);
+      logger.error('Report creation validation error', {
+        error: error.issues,
+        userId,
+      });
       return createErrorResponse(
         400,
         'BadRequest',
         `Validation error: ${error.issues.map((e: any) => e.message).join(', ')}`,
       );
     }
-    console.error('❌ レポート作成エラー:', error);
+    logger.error('Report creation error', {
+      error: error instanceof Error ? error.message : String(error),
+      userId,
+    });
     return createErrorResponse(500, 'InternalError', 'Failed to create report');
   }
 }
@@ -46,8 +55,10 @@ export async function handleCreateReport(
 export async function handleGetReports(
   event: APIGatewayProxyEventV2,
 ): Promise<APIGatewayProxyResultV2> {
+  let userId: string | null = null;
+
   try {
-    const userId = await getUserId(event);
+    userId = await getUserId(event);
     if (!userId) {
       return createErrorResponse(401, 'Unauthorized', 'Valid JWT token required');
     }
@@ -86,14 +97,20 @@ export async function handleGetReports(
     return createResponse(200, response);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      console.error('❌ バリデーションエラー:', error.issues);
+      logger.error('Reports query validation error', {
+        error: error.issues,
+        userId,
+      });
       return createErrorResponse(
         400,
         'BadRequest',
         `Validation error: ${error.issues.map((e: any) => e.message).join(', ')}`,
       );
     }
-    console.error('❌ レポート取得エラー:', error);
+    logger.error('Reports query error', {
+      error: error instanceof Error ? error.message : String(error),
+      userId,
+    });
     return createErrorResponse(500, 'InternalError', 'Failed to get reports');
   }
 }
@@ -101,13 +118,16 @@ export async function handleGetReports(
 export async function handleGetReport(
   event: APIGatewayProxyEventV2,
 ): Promise<APIGatewayProxyResultV2> {
+  let userId: string | null = null;
+  let reportId: string | undefined;
+
   try {
-    const userId = await getUserId(event);
+    userId = await getUserId(event);
     if (!userId) {
       return createErrorResponse(401, 'Unauthorized', 'Valid JWT token required');
     }
 
-    const reportId = event.pathParameters?.id;
+    reportId = event.pathParameters?.id;
     if (!reportId) {
       return createErrorResponse(400, 'BadRequest', 'Report ID is required');
     }
@@ -121,7 +141,11 @@ export async function handleGetReport(
     const apiItem = dynamoToApi(reportItem);
     return createResponse(200, apiItem);
   } catch (error) {
-    console.error('❌ handleGetReport エラー:', error);
+    logger.error('Get report error', {
+      error: error instanceof Error ? error.message : String(error),
+      userId,
+      reportId,
+    });
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return createErrorResponse(500, 'InternalError', `Failed to get report: ${errorMessage}`);
   }

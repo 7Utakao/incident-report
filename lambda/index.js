@@ -575,12 +575,12 @@ var require_dist_cjs5 = __commonJS({
     var loggerMiddleware = /* @__PURE__ */ __name(() => (next, context) => async (args) => {
       try {
         const response = await next(args);
-        const { clientName, commandName, logger: logger3, dynamoDbDocumentClientOptions = {} } = context;
+        const { clientName, commandName, logger: logger4, dynamoDbDocumentClientOptions = {} } = context;
         const { overrideInputFilterSensitiveLog, overrideOutputFilterSensitiveLog } = dynamoDbDocumentClientOptions;
         const inputFilterSensitiveLog = overrideInputFilterSensitiveLog ?? context.inputFilterSensitiveLog;
         const outputFilterSensitiveLog = overrideOutputFilterSensitiveLog ?? context.outputFilterSensitiveLog;
         const { $metadata, ...outputWithoutMetadata } = response.output;
-        logger3?.info?.({
+        logger4?.info?.({
           clientName,
           commandName,
           input: inputFilterSensitiveLog(args.input),
@@ -589,10 +589,10 @@ var require_dist_cjs5 = __commonJS({
         });
         return response;
       } catch (error) {
-        const { clientName, commandName, logger: logger3, dynamoDbDocumentClientOptions = {} } = context;
+        const { clientName, commandName, logger: logger4, dynamoDbDocumentClientOptions = {} } = context;
         const { overrideInputFilterSensitiveLog } = dynamoDbDocumentClientOptions;
         const inputFilterSensitiveLog = overrideInputFilterSensitiveLog ?? context.inputFilterSensitiveLog;
-        logger3?.error?.({
+        logger4?.error?.({
           clientName,
           commandName,
           input: inputFilterSensitiveLog(args.input),
@@ -1504,7 +1504,7 @@ var require_createBufferedReadableStream = __commonJS({
     exports2.sizeOf = sizeOf;
     exports2.modeOf = modeOf;
     var ByteArrayCollector_1 = require_ByteArrayCollector();
-    function createBufferedReadableStream(upstream, size, logger3) {
+    function createBufferedReadableStream(upstream, size, logger4) {
       const reader = upstream.getReader();
       let streamBufferingLoggedWarning = false;
       let bytesSeen = 0;
@@ -1542,7 +1542,7 @@ var require_createBufferedReadableStream = __commonJS({
             const newSize = merge(buffers, mode, chunk);
             if (!streamBufferingLoggedWarning && bytesSeen > size * 2) {
               streamBufferingLoggedWarning = true;
-              logger3 === null || logger3 === void 0 ? void 0 : logger3.warn(`@smithy/util-stream - stream chunk size ${chunkSize} is below threshold of ${size}, automatically buffering.`);
+              logger4 === null || logger4 === void 0 ? void 0 : logger4.warn(`@smithy/util-stream - stream chunk size ${chunkSize} is below threshold of ${size}, automatically buffering.`);
             }
             if (newSize >= size) {
               controller.enqueue(flush(buffers, mode));
@@ -1609,9 +1609,9 @@ var require_createBufferedReadable = __commonJS({
     var ByteArrayCollector_1 = require_ByteArrayCollector();
     var createBufferedReadableStream_1 = require_createBufferedReadableStream();
     var stream_type_check_1 = require_stream_type_check();
-    function createBufferedReadable2(upstream, size, logger3) {
+    function createBufferedReadable2(upstream, size, logger4) {
       if ((0, stream_type_check_1.isReadableStream)(upstream)) {
-        return (0, createBufferedReadableStream_1.createBufferedReadableStream)(upstream, size, logger3);
+        return (0, createBufferedReadableStream_1.createBufferedReadableStream)(upstream, size, logger4);
       }
       const downstream = new node_stream_1.Readable({ read() {
       } });
@@ -1644,7 +1644,7 @@ var require_createBufferedReadable = __commonJS({
           const newSize = (0, createBufferedReadableStream_1.merge)(buffers, mode, chunk);
           if (!streamBufferingLoggedWarning && bytesSeen > size * 2) {
             streamBufferingLoggedWarning = true;
-            logger3 === null || logger3 === void 0 ? void 0 : logger3.warn(`@smithy/util-stream - stream chunk size ${chunkSize} is below threshold of ${size}, automatically buffering.`);
+            logger4 === null || logger4 === void 0 ? void 0 : logger4.warn(`@smithy/util-stream - stream chunk size ${chunkSize} is below threshold of ${size}, automatically buffering.`);
           }
           if (newSize >= size) {
             downstream.push((0, createBufferedReadableStream_1.flush)(buffers, mode));
@@ -2106,7 +2106,7 @@ var require_dist_cjs15 = __commonJS({
        * @param logger - channel for the warning.
        * @returns timestamp of last emitted warning.
        */
-      static checkSocketUsage(agent, socketWarningTimestamp, logger3 = console) {
+      static checkSocketUsage(agent, socketWarningTimestamp, logger4 = console) {
         const { sockets, requests, maxSockets } = agent;
         if (typeof maxSockets !== "number" || maxSockets === Infinity) {
           return socketWarningTimestamp;
@@ -2120,7 +2120,7 @@ var require_dist_cjs15 = __commonJS({
             const socketsInUse = sockets[origin]?.length ?? 0;
             const requestsEnqueued = requests[origin]?.length ?? 0;
             if (socketsInUse >= maxSockets && requestsEnqueued >= 2 * maxSockets) {
-              logger3?.warn?.(
+              logger4?.warn?.(
                 `@smithy/node-http-handler:WARN - socket usage at capacity=${socketsInUse} and ${requestsEnqueued} additional requests are enqueued.
 See https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/node-configuring-maxsockets.html
 or increase socketAcquisitionWarningTimeout=(millis) in the NodeHttpHandler config.`
@@ -3838,7 +3838,7 @@ var init_copyDocumentWithTransform = __esm({
 });
 
 // node_modules/@smithy/core/dist-es/submodules/serde/parse-utils.js
-var parseBoolean2, expectBoolean2, expectNumber2, MAX_FLOAT, expectFloat322, expectLong2, expectInt2, expectInt322, expectShort2, expectByte2, expectSizedInt, castInt, expectNonNull2, expectObject2, expectString2, expectUnion2, strictParseDouble2, strictParseFloat2, strictParseFloat322, NUMBER_REGEX, parseNumber, limitedParseDouble2, handleFloat2, limitedParseFloat2, limitedParseFloat322, parseFloatString, strictParseLong2, strictParseInt2, strictParseInt322, strictParseShort2, strictParseByte2, stackTraceWarning, logger2;
+var parseBoolean2, expectBoolean2, expectNumber2, MAX_FLOAT, expectFloat322, expectLong2, expectInt2, expectInt322, expectShort2, expectByte2, expectSizedInt, castInt, expectNonNull2, expectObject2, expectString2, expectUnion2, strictParseDouble2, strictParseFloat2, strictParseFloat322, NUMBER_REGEX, parseNumber, limitedParseDouble2, handleFloat2, limitedParseFloat2, limitedParseFloat322, parseFloatString, strictParseLong2, strictParseInt2, strictParseInt322, strictParseShort2, strictParseByte2, stackTraceWarning, logger3;
 var init_parse_utils = __esm({
   "node_modules/@smithy/core/dist-es/submodules/serde/parse-utils.js"() {
     parseBoolean2 = (value) => {
@@ -3857,7 +3857,7 @@ var init_parse_utils = __esm({
       }
       if (typeof value === "number") {
         if (value === 0 || value === 1) {
-          logger2.warn(stackTraceWarning(`Expected boolean, got ${typeof value}: ${value}`));
+          logger3.warn(stackTraceWarning(`Expected boolean, got ${typeof value}: ${value}`));
         }
         if (value === 0) {
           return false;
@@ -3869,7 +3869,7 @@ var init_parse_utils = __esm({
       if (typeof value === "string") {
         const lower = value.toLowerCase();
         if (lower === "false" || lower === "true") {
-          logger2.warn(stackTraceWarning(`Expected boolean, got ${typeof value}: ${value}`));
+          logger3.warn(stackTraceWarning(`Expected boolean, got ${typeof value}: ${value}`));
         }
         if (lower === "false") {
           return false;
@@ -3891,7 +3891,7 @@ var init_parse_utils = __esm({
         const parsed = parseFloat(value);
         if (!Number.isNaN(parsed)) {
           if (String(parsed) !== String(value)) {
-            logger2.warn(stackTraceWarning(`Expected number but observed string: ${value}`));
+            logger3.warn(stackTraceWarning(`Expected number but observed string: ${value}`));
           }
           return parsed;
         }
@@ -3968,7 +3968,7 @@ var init_parse_utils = __esm({
         return value;
       }
       if (["boolean", "number", "bigint"].includes(typeof value)) {
-        logger2.warn(stackTraceWarning(`Expected string, got ${typeof value}: ${value}`));
+        logger3.warn(stackTraceWarning(`Expected string, got ${typeof value}: ${value}`));
         return String(value);
       }
       throw new TypeError(`Expected string, got ${typeof value}: ${value}`);
@@ -4062,7 +4062,7 @@ var init_parse_utils = __esm({
     stackTraceWarning = (message2) => {
       return String(new TypeError(message2).stack || message2).split("\n").slice(0, 5).filter((s4) => !s4.includes("stackTraceWarning")).join("\n");
     };
-    logger2 = {
+    logger3 = {
       warn: console.warn
     };
   }
@@ -4811,7 +4811,7 @@ __export(serde_exports, {
   limitedParseDouble: () => limitedParseDouble2,
   limitedParseFloat: () => limitedParseFloat2,
   limitedParseFloat32: () => limitedParseFloat322,
-  logger: () => logger2,
+  logger: () => logger3,
   nv: () => nv2,
   parseBoolean: () => parseBoolean2,
   parseEpochTimestamp: () => parseEpochTimestamp2,
@@ -6325,7 +6325,7 @@ var require_dist_cjs19 = __commonJS({
       throw new EndpointError2(`Rules evaluation failed`);
     }, "evaluateRules");
     var resolveEndpoint4 = /* @__PURE__ */ __name((ruleSetObject, options) => {
-      const { endpointParams, logger: logger3 } = options;
+      const { endpointParams, logger: logger4 } = options;
       const { parameters, rules } = ruleSetObject;
       options.logger?.debug?.(`${debugId} Initial EndpointParams: ${toDebugString(endpointParams)}`);
       const paramsWithDefault = Object.entries(parameters).filter(([, v7]) => v7.default != null).map(([k4, v7]) => [k4, v7.default]);
@@ -6340,7 +6340,7 @@ var require_dist_cjs19 = __commonJS({
           throw new EndpointError2(`Missing required parameter: '${requiredParam}'`);
         }
       }
-      const endpoint = evaluateRules(rules, { endpointParams, logger: logger3, referenceRecord: {} });
+      const endpoint = evaluateRules(rules, { endpointParams, logger: logger4, referenceRecord: {} });
       options.logger?.debug?.(`${debugId} Resolved endpoint: ${toDebugString(endpoint)}`);
       return endpoint;
     }, "resolveEndpoint");
@@ -7193,20 +7193,20 @@ var require_dist_cjs23 = __commonJS({
     module2.exports = __toCommonJS2(src_exports);
     var ProviderError2 = class _ProviderError extends Error {
       constructor(message2, options = true) {
-        let logger3;
+        let logger4;
         let tryNextLink = true;
         if (typeof options === "boolean") {
-          logger3 = void 0;
+          logger4 = void 0;
           tryNextLink = options;
         } else if (options != null && typeof options === "object") {
-          logger3 = options.logger;
+          logger4 = options.logger;
           tryNextLink = options.tryNextLink ?? true;
         }
         super(message2);
         this.name = "ProviderError";
         this.tryNextLink = tryNextLink;
         Object.setPrototypeOf(this, _ProviderError.prototype);
-        logger3?.debug?.(`@smithy/property-provider ${tryNextLink ? "->" : "(!)"} ${message2}`);
+        logger4?.debug?.(`@smithy/property-provider ${tryNextLink ? "->" : "(!)"} ${message2}`);
       }
       static {
         __name(this, "ProviderError");
@@ -8721,9 +8721,9 @@ var require_dist_cjs27 = __commonJS({
           this.middlewareStack.use(mw);
         }
         const stack = clientStack.concat(this.middlewareStack);
-        const { logger: logger3 } = configuration;
+        const { logger: logger4 } = configuration;
         const handlerExecutionContext = {
-          logger: logger3,
+          logger: logger4,
           clientName,
           commandName,
           inputFilterSensitiveLog,
@@ -12579,11 +12579,11 @@ var require_dist_cjs29 = __commonJS({
         userAgentAppId: /* @__PURE__ */ __name(async () => {
           const appId = await normalizedAppIdProvider();
           if (!isValidUserAgentAppId(appId)) {
-            const logger3 = input.logger?.constructor?.name === "NoOpLogger" || !input.logger ? console : input.logger;
+            const logger4 = input.logger?.constructor?.name === "NoOpLogger" || !input.logger ? console : input.logger;
             if (typeof appId !== "string") {
-              logger3?.warn("userAgentAppId must be a string or undefined.");
+              logger4?.warn("userAgentAppId must be a string or undefined.");
             } else if (appId.length > 50) {
-              logger3?.warn("The provided userAgentAppId exceeds the maximum length of 50 characters.");
+              logger4?.warn("The provided userAgentAppId exceeds the maximum length of 50 characters.");
             }
           }
           return appId;
@@ -15764,8 +15764,8 @@ var require_dist_cjs43 = __commonJS({
     var isFunction3 = /* @__PURE__ */ __name((func) => typeof func === "function", "isFunction");
     var fromStatic = /* @__PURE__ */ __name((defaultValue) => isFunction3(defaultValue) ? async () => await defaultValue() : (0, import_property_provider2.fromStatic)(defaultValue), "fromStatic");
     var loadConfig = /* @__PURE__ */ __name(({ environmentVariableSelector, configFileSelector, default: defaultValue }, configuration = {}) => {
-      const { signingName, logger: logger3 } = configuration;
-      const envOptions = { signingName, logger: logger3 };
+      const { signingName, logger: logger4 } = configuration;
+      const envOptions = { signingName, logger: logger4 };
       return (0, import_property_provider2.memoize)(
         (0, import_property_provider2.chain)(
           fromEnv(environmentVariableSelector, envOptions),
@@ -17292,7 +17292,7 @@ var require_dist_cjs49 = __commonJS({
       "http:": true,
       "https:": true
     };
-    var getCmdsUri = /* @__PURE__ */ __name(async ({ logger: logger3 }) => {
+    var getCmdsUri = /* @__PURE__ */ __name(async ({ logger: logger4 }) => {
       if (process.env[ENV_CMDS_RELATIVE_URI]) {
         return {
           hostname: CMDS_IP,
@@ -17304,13 +17304,13 @@ var require_dist_cjs49 = __commonJS({
         if (!parsed.hostname || !(parsed.hostname in GREENGRASS_HOSTS)) {
           throw new import_property_provider2.CredentialsProviderError(`${parsed.hostname} is not a valid container metadata service hostname`, {
             tryNextLink: false,
-            logger: logger3
+            logger: logger4
           });
         }
         if (!parsed.protocol || !(parsed.protocol in GREENGRASS_PROTOCOLS)) {
           throw new import_property_provider2.CredentialsProviderError(`${parsed.protocol} is not a valid container metadata service protocol`, {
             tryNextLink: false,
-            logger: logger3
+            logger: logger4
           });
         }
         return {
@@ -17322,7 +17322,7 @@ var require_dist_cjs49 = __commonJS({
         `The container metadata credential provider cannot be used unless the ${ENV_CMDS_RELATIVE_URI} or ${ENV_CMDS_FULL_URI} environment variable is set`,
         {
           tryNextLink: false,
-          logger: logger3
+          logger: logger4
         }
       );
     }, "getCmdsUri");
@@ -17380,10 +17380,10 @@ var require_dist_cjs49 = __commonJS({
     var STATIC_STABILITY_REFRESH_INTERVAL_SECONDS = 5 * 60;
     var STATIC_STABILITY_REFRESH_INTERVAL_JITTER_WINDOW_SECONDS = 5 * 60;
     var STATIC_STABILITY_DOC_URL = "https://docs.aws.amazon.com/sdkref/latest/guide/feature-static-credentials.html";
-    var getExtendedInstanceMetadataCredentials = /* @__PURE__ */ __name((credentials, logger3) => {
+    var getExtendedInstanceMetadataCredentials = /* @__PURE__ */ __name((credentials, logger4) => {
       const refreshInterval = STATIC_STABILITY_REFRESH_INTERVAL_SECONDS + Math.floor(Math.random() * STATIC_STABILITY_REFRESH_INTERVAL_JITTER_WINDOW_SECONDS);
       const newExpiration = new Date(Date.now() + refreshInterval * 1e3);
-      logger3.warn(
+      logger4.warn(
         `Attempting credential expiration extension due to a credential service availability issue. A refresh of these credentials will be attempted after ${new Date(newExpiration)}.
 For more information, please visit: ` + STATIC_STABILITY_DOC_URL
       );
@@ -17395,19 +17395,19 @@ For more information, please visit: ` + STATIC_STABILITY_DOC_URL
       };
     }, "getExtendedInstanceMetadataCredentials");
     var staticStabilityProvider = /* @__PURE__ */ __name((provider, options = {}) => {
-      const logger3 = options?.logger || console;
+      const logger4 = options?.logger || console;
       let pastCredentials;
       return async () => {
         let credentials;
         try {
           credentials = await provider();
           if (credentials.expiration && credentials.expiration.getTime() < Date.now()) {
-            credentials = getExtendedInstanceMetadataCredentials(credentials, logger3);
+            credentials = getExtendedInstanceMetadataCredentials(credentials, logger4);
           }
         } catch (e4) {
           if (pastCredentials) {
-            logger3.warn("Credential renew failed: ", e4);
-            credentials = getExtendedInstanceMetadataCredentials(pastCredentials, logger3);
+            logger4.warn("Credential renew failed: ", e4);
+            credentials = getExtendedInstanceMetadataCredentials(pastCredentials, logger4);
           } else {
             throw e4;
           }
@@ -17424,7 +17424,7 @@ For more information, please visit: ` + STATIC_STABILITY_DOC_URL
     var fromInstanceMetadata = /* @__PURE__ */ __name((init2 = {}) => staticStabilityProvider(getInstanceMetadataProvider(init2), { logger: init2.logger }), "fromInstanceMetadata");
     var getInstanceMetadataProvider = /* @__PURE__ */ __name((init2 = {}) => {
       let disableFetchToken = false;
-      const { logger: logger3, profile } = init2;
+      const { logger: logger4, profile } = init2;
       const { timeout, maxRetries } = providerConfigFromInit(init2);
       const getCredentials = /* @__PURE__ */ __name(async (maxRetries2, options) => {
         const isImdsV1Fallback = disableFetchToken || options.headers?.[X_AWS_EC2_METADATA_TOKEN] == null;
@@ -17498,7 +17498,7 @@ For more information, please visit: ` + STATIC_STABILITY_DOC_URL
       return async () => {
         const endpoint = await getInstanceMetadataEndpoint();
         if (disableFetchToken) {
-          logger3?.debug("AWS SDK Instance Metadata", "using v1 fallback (no token fetch)");
+          logger4?.debug("AWS SDK Instance Metadata", "using v1 fallback (no token fetch)");
           return getCredentials(maxRetries, { ...endpoint, timeout });
         } else {
           let token;
@@ -17512,7 +17512,7 @@ For more information, please visit: ` + STATIC_STABILITY_DOC_URL
             } else if (error.message === "TimeoutError" || [403, 404, 405].includes(error.statusCode)) {
               disableFetchToken = true;
             }
-            logger3?.debug("AWS SDK Instance Metadata", "using v1 fallback (initial)");
+            logger4?.debug("AWS SDK Instance Metadata", "using v1 fallback (initial)");
             return getCredentials(maxRetries, { ...endpoint, timeout });
           }
           return getCredentials(maxRetries, {
@@ -17561,7 +17561,7 @@ var require_checkUrl = __commonJS({
     var ECS_CONTAINER_HOST = "169.254.170.2";
     var EKS_CONTAINER_HOST_IPv4 = "169.254.170.23";
     var EKS_CONTAINER_HOST_IPv6 = "[fd00:ec2::23]";
-    var checkUrl = (url, logger3) => {
+    var checkUrl = (url, logger4) => {
       if (url.protocol === "https:") {
         return;
       }
@@ -17588,7 +17588,7 @@ var require_checkUrl = __commonJS({
       throw new property_provider_1.CredentialsProviderError(`URL not accepted. It must either be HTTPS or match one of the following:
   - loopback CIDR 127.0.0.0/8 or [::1/128]
   - ECS container host 169.254.170.2
-  - EKS container host 169.254.170.23 or [fd00:ec2::23]`, { logger: logger3 });
+  - EKS container host 169.254.170.23 or [fd00:ec2::23]`, { logger: logger4 });
     };
     exports2.checkUrl = checkUrl;
   }
@@ -17618,13 +17618,13 @@ var require_requestHelpers = __commonJS({
         fragment: url.hash
       });
     }
-    async function getCredentials(response, logger3) {
+    async function getCredentials(response, logger4) {
       const stream = (0, util_stream_1.sdkStreamMixin)(response.body);
       const str2 = await stream.transformToString();
       if (response.statusCode === 200) {
         const parsed = JSON.parse(str2);
         if (typeof parsed.AccessKeyId !== "string" || typeof parsed.SecretAccessKey !== "string" || typeof parsed.Token !== "string" || typeof parsed.Expiration !== "string") {
-          throw new property_provider_1.CredentialsProviderError("HTTP credential provider response not of the required format, an object matching: { AccessKeyId: string, SecretAccessKey: string, Token: string, Expiration: string(rfc3339) }", { logger: logger3 });
+          throw new property_provider_1.CredentialsProviderError("HTTP credential provider response not of the required format, an object matching: { AccessKeyId: string, SecretAccessKey: string, Token: string, Expiration: string(rfc3339) }", { logger: logger4 });
         }
         return {
           accessKeyId: parsed.AccessKeyId,
@@ -17639,12 +17639,12 @@ var require_requestHelpers = __commonJS({
           parsedBody = JSON.parse(str2);
         } catch (e4) {
         }
-        throw Object.assign(new property_provider_1.CredentialsProviderError(`Server responded with status: ${response.statusCode}`, { logger: logger3 }), {
+        throw Object.assign(new property_provider_1.CredentialsProviderError(`Server responded with status: ${response.statusCode}`, { logger: logger4 }), {
           Code: parsedBody.Code,
           Message: parsedBody.Message
         });
       }
-      throw new property_provider_1.CredentialsProviderError(`Server responded with status: ${response.statusCode}`, { logger: logger3 });
+      throw new property_provider_1.CredentialsProviderError(`Server responded with status: ${response.statusCode}`, { logger: logger4 });
     }
   }
 });
@@ -20090,14 +20090,14 @@ var require_dist_cjs57 = __commonJS({
     var import_client3 = (init_client(), __toCommonJS(client_exports));
     var import_httpAuthSchemes = (init_httpAuthSchemes2(), __toCommonJS(httpAuthSchemes_exports));
     var import_property_provider2 = require_dist_cjs23();
-    var fromEnvSigningName = /* @__PURE__ */ __name(({ logger: logger3, signingName } = {}) => async () => {
-      logger3?.debug?.("@aws-sdk/token-providers - fromEnvSigningName");
+    var fromEnvSigningName = /* @__PURE__ */ __name(({ logger: logger4, signingName } = {}) => async () => {
+      logger4?.debug?.("@aws-sdk/token-providers - fromEnvSigningName");
       if (!signingName) {
-        throw new import_property_provider2.TokenProviderError("Please pass 'signingName' to compute environment variable key", { logger: logger3 });
+        throw new import_property_provider2.TokenProviderError("Please pass 'signingName' to compute environment variable key", { logger: logger4 });
       }
       const bearerTokenKey = (0, import_httpAuthSchemes.getBearerTokenEnvKey)(signingName);
       if (!(bearerTokenKey in process.env)) {
-        throw new import_property_provider2.TokenProviderError(`Token not present in '${bearerTokenKey}' environment variable`, { logger: logger3 });
+        throw new import_property_provider2.TokenProviderError(`Token not present in '${bearerTokenKey}' environment variable`, { logger: logger4 });
       }
       const token = { token: process.env[bearerTokenKey] };
       (0, import_client3.setTokenFeature)(token, "BEARER_SERVICE_ENV_VARS", "3");
@@ -20234,8 +20234,8 @@ var require_dist_cjs57 = __commonJS({
         return existingToken;
       }
     }, "fromSso");
-    var fromStatic = /* @__PURE__ */ __name(({ token, logger: logger3 }) => async () => {
-      logger3?.debug("@aws-sdk/token-providers - fromStatic");
+    var fromStatic = /* @__PURE__ */ __name(({ token, logger: logger4 }) => async () => {
+      logger4?.debug("@aws-sdk/token-providers - fromStatic");
       if (!token || !token.token) {
         throw new import_property_provider2.TokenProviderError(`Please pass a valid token to fromStatic`, false);
       }
@@ -20311,7 +20311,7 @@ var require_dist_cjs58 = __commonJS({
       clientConfig,
       parentClientConfig,
       profile,
-      logger: logger3
+      logger: logger4
     }) => {
       let token;
       const refreshMessage = `To refresh this SSO session run aws sso login with the corresponding profile.`;
@@ -20325,7 +20325,7 @@ var require_dist_cjs58 = __commonJS({
         } catch (e4) {
           throw new import_property_provider2.CredentialsProviderError(e4.message, {
             tryNextLink: SHOULD_FAIL_CREDENTIAL_CHAIN,
-            logger: logger3
+            logger: logger4
           });
         }
       } else {
@@ -20334,14 +20334,14 @@ var require_dist_cjs58 = __commonJS({
         } catch (e4) {
           throw new import_property_provider2.CredentialsProviderError(`The SSO session associated with this profile is invalid. ${refreshMessage}`, {
             tryNextLink: SHOULD_FAIL_CREDENTIAL_CHAIN,
-            logger: logger3
+            logger: logger4
           });
         }
       }
       if (new Date(token.expiresAt).getTime() - Date.now() <= 0) {
         throw new import_property_provider2.CredentialsProviderError(`The SSO session associated with this profile has expired. ${refreshMessage}`, {
           tryNextLink: SHOULD_FAIL_CREDENTIAL_CHAIN,
-          logger: logger3
+          logger: logger4
         });
       }
       const { accessToken } = token;
@@ -20364,7 +20364,7 @@ var require_dist_cjs58 = __commonJS({
       } catch (e4) {
         throw new import_property_provider2.CredentialsProviderError(e4, {
           tryNextLink: SHOULD_FAIL_CREDENTIAL_CHAIN,
-          logger: logger3
+          logger: logger4
         });
       }
       const {
@@ -20373,7 +20373,7 @@ var require_dist_cjs58 = __commonJS({
       if (!accessKeyId || !secretAccessKey || !sessionToken || !expiration) {
         throw new import_property_provider2.CredentialsProviderError("SSO returns an invalid temporary credential.", {
           tryNextLink: SHOULD_FAIL_CREDENTIAL_CHAIN,
-          logger: logger3
+          logger: logger4
         });
       }
       const credentials = {
@@ -20391,7 +20391,7 @@ var require_dist_cjs58 = __commonJS({
       }
       return credentials;
     }, "resolveSSOCredentials");
-    var validateSsoProfile = /* @__PURE__ */ __name((profile, logger3) => {
+    var validateSsoProfile = /* @__PURE__ */ __name((profile, logger4) => {
       const { sso_start_url, sso_account_id, sso_region, sso_role_name } = profile;
       if (!sso_start_url || !sso_account_id || !sso_region || !sso_role_name) {
         throw new import_property_provider2.CredentialsProviderError(
@@ -20399,7 +20399,7 @@ var require_dist_cjs58 = __commonJS({
             ", "
           )}
 Reference: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html`,
-          { tryNextLink: false, logger: logger3 }
+          { tryNextLink: false, logger: logger4 }
         );
       }
       return profile;
@@ -21607,7 +21607,7 @@ var init_defaultStsRoleAssumers = __esm({
       return async (sourceCreds, params) => {
         closureSourceCreds = sourceCreds;
         if (!stsClient) {
-          const { logger: logger3 = stsOptions?.parentClientConfig?.logger, region, requestHandler = stsOptions?.parentClientConfig?.requestHandler, credentialProviderLogger } = stsOptions;
+          const { logger: logger4 = stsOptions?.parentClientConfig?.logger, region, requestHandler = stsOptions?.parentClientConfig?.requestHandler, credentialProviderLogger } = stsOptions;
           const resolvedRegion = await resolveRegion(region, stsOptions?.parentClientConfig?.region, credentialProviderLogger);
           const isCompatibleRequestHandler = !isH2(requestHandler);
           stsClient = new STSClient2({
@@ -21615,7 +21615,7 @@ var init_defaultStsRoleAssumers = __esm({
             credentialDefaultProvider: () => async () => closureSourceCreds,
             region: resolvedRegion,
             requestHandler: isCompatibleRequestHandler ? requestHandler : void 0,
-            logger: logger3
+            logger: logger4
           });
         }
         const { Credentials, AssumedRoleUser } = await stsClient.send(new AssumeRoleCommand(params));
@@ -21639,14 +21639,14 @@ var init_defaultStsRoleAssumers = __esm({
       let stsClient;
       return async (params) => {
         if (!stsClient) {
-          const { logger: logger3 = stsOptions?.parentClientConfig?.logger, region, requestHandler = stsOptions?.parentClientConfig?.requestHandler, credentialProviderLogger } = stsOptions;
+          const { logger: logger4 = stsOptions?.parentClientConfig?.logger, region, requestHandler = stsOptions?.parentClientConfig?.requestHandler, credentialProviderLogger } = stsOptions;
           const resolvedRegion = await resolveRegion(region, stsOptions?.parentClientConfig?.region, credentialProviderLogger);
           const isCompatibleRequestHandler = !isH2(requestHandler);
           stsClient = new STSClient2({
             profile: stsOptions?.parentClientConfig?.profile,
             region: resolvedRegion,
             requestHandler: isCompatibleRequestHandler ? requestHandler : void 0,
-            logger: logger3
+            logger: logger4
           });
         }
         const { Credentials, AssumedRoleUser } = await stsClient.send(new AssumeRoleWithWebIdentityCommand(params));
@@ -21800,7 +21800,7 @@ var require_dist_cjs59 = __commonJS({
       (0, import_client3.setCredentialFeature)(credentials, "CREDENTIALS_PROCESS", "w");
       return credentials;
     }, "getValidatedProcessCredentials");
-    var resolveProcessCredentials = /* @__PURE__ */ __name(async (profileName, profiles, logger3) => {
+    var resolveProcessCredentials = /* @__PURE__ */ __name(async (profileName, profiles, logger4) => {
       const profile = profiles[profileName];
       if (profiles[profileName]) {
         const credentialProcess = profile["credential_process"];
@@ -21816,14 +21816,14 @@ var require_dist_cjs59 = __commonJS({
             }
             return getValidatedProcessCredentials(profileName, data, profiles);
           } catch (error) {
-            throw new import_property_provider2.CredentialsProviderError(error.message, { logger: logger3 });
+            throw new import_property_provider2.CredentialsProviderError(error.message, { logger: logger4 });
           }
         } else {
-          throw new import_property_provider2.CredentialsProviderError(`Profile ${profileName} did not contain credential_process.`, { logger: logger3 });
+          throw new import_property_provider2.CredentialsProviderError(`Profile ${profileName} did not contain credential_process.`, { logger: logger4 });
         }
       } else {
         throw new import_property_provider2.CredentialsProviderError(`Profile ${profileName} could not be found in shared credentials file.`, {
-          logger: logger3
+          logger: logger4
         });
       }
     }, "resolveProcessCredentials");
@@ -22023,21 +22023,21 @@ var require_dist_cjs61 = __commonJS({
     var import_shared_ini_file_loader = require_dist_cjs42();
     var import_client3 = (init_client(), __toCommonJS(client_exports));
     var import_property_provider2 = require_dist_cjs23();
-    var resolveCredentialSource = /* @__PURE__ */ __name((credentialSource, profileName, logger3) => {
+    var resolveCredentialSource = /* @__PURE__ */ __name((credentialSource, profileName, logger4) => {
       const sourceProvidersMap = {
         EcsContainer: /* @__PURE__ */ __name(async (options) => {
           const { fromHttp } = await Promise.resolve().then(() => __toESM2(require_dist_cjs50()));
           const { fromContainerMetadata } = await Promise.resolve().then(() => __toESM2(require_dist_cjs49()));
-          logger3?.debug("@aws-sdk/credential-provider-ini - credential_source is EcsContainer");
+          logger4?.debug("@aws-sdk/credential-provider-ini - credential_source is EcsContainer");
           return async () => (0, import_property_provider2.chain)(fromHttp(options ?? {}), fromContainerMetadata(options))().then(setNamedProvider);
         }, "EcsContainer"),
         Ec2InstanceMetadata: /* @__PURE__ */ __name(async (options) => {
-          logger3?.debug("@aws-sdk/credential-provider-ini - credential_source is Ec2InstanceMetadata");
+          logger4?.debug("@aws-sdk/credential-provider-ini - credential_source is Ec2InstanceMetadata");
           const { fromInstanceMetadata } = await Promise.resolve().then(() => __toESM2(require_dist_cjs49()));
           return async () => fromInstanceMetadata(options)().then(setNamedProvider);
         }, "Ec2InstanceMetadata"),
         Environment: /* @__PURE__ */ __name(async (options) => {
-          logger3?.debug("@aws-sdk/credential-provider-ini - credential_source is Environment");
+          logger4?.debug("@aws-sdk/credential-provider-ini - credential_source is Environment");
           const { fromEnv } = await Promise.resolve().then(() => __toESM2(require_dist_cjs48()));
           return async () => fromEnv(options)().then(setNamedProvider);
         }, "Environment")
@@ -22047,25 +22047,25 @@ var require_dist_cjs61 = __commonJS({
       } else {
         throw new import_property_provider2.CredentialsProviderError(
           `Unsupported credential source in profile ${profileName}. Got ${credentialSource}, expected EcsContainer or Ec2InstanceMetadata or Environment.`,
-          { logger: logger3 }
+          { logger: logger4 }
         );
       }
     }, "resolveCredentialSource");
     var setNamedProvider = /* @__PURE__ */ __name((creds) => (0, import_client3.setCredentialFeature)(creds, "CREDENTIALS_PROFILE_NAMED_PROVIDER", "p"), "setNamedProvider");
-    var isAssumeRoleProfile = /* @__PURE__ */ __name((arg, { profile = "default", logger: logger3 } = {}) => {
-      return Boolean(arg) && typeof arg === "object" && typeof arg.role_arn === "string" && ["undefined", "string"].indexOf(typeof arg.role_session_name) > -1 && ["undefined", "string"].indexOf(typeof arg.external_id) > -1 && ["undefined", "string"].indexOf(typeof arg.mfa_serial) > -1 && (isAssumeRoleWithSourceProfile(arg, { profile, logger: logger3 }) || isCredentialSourceProfile(arg, { profile, logger: logger3 }));
+    var isAssumeRoleProfile = /* @__PURE__ */ __name((arg, { profile = "default", logger: logger4 } = {}) => {
+      return Boolean(arg) && typeof arg === "object" && typeof arg.role_arn === "string" && ["undefined", "string"].indexOf(typeof arg.role_session_name) > -1 && ["undefined", "string"].indexOf(typeof arg.external_id) > -1 && ["undefined", "string"].indexOf(typeof arg.mfa_serial) > -1 && (isAssumeRoleWithSourceProfile(arg, { profile, logger: logger4 }) || isCredentialSourceProfile(arg, { profile, logger: logger4 }));
     }, "isAssumeRoleProfile");
-    var isAssumeRoleWithSourceProfile = /* @__PURE__ */ __name((arg, { profile, logger: logger3 }) => {
+    var isAssumeRoleWithSourceProfile = /* @__PURE__ */ __name((arg, { profile, logger: logger4 }) => {
       const withSourceProfile = typeof arg.source_profile === "string" && typeof arg.credential_source === "undefined";
       if (withSourceProfile) {
-        logger3?.debug?.(`    ${profile} isAssumeRoleWithSourceProfile source_profile=${arg.source_profile}`);
+        logger4?.debug?.(`    ${profile} isAssumeRoleWithSourceProfile source_profile=${arg.source_profile}`);
       }
       return withSourceProfile;
     }, "isAssumeRoleWithSourceProfile");
-    var isCredentialSourceProfile = /* @__PURE__ */ __name((arg, { profile, logger: logger3 }) => {
+    var isCredentialSourceProfile = /* @__PURE__ */ __name((arg, { profile, logger: logger4 }) => {
       const withProviderProfile = typeof arg.credential_source === "string" && typeof arg.source_profile === "undefined";
       if (withProviderProfile) {
-        logger3?.debug?.(`    ${profile} isCredentialSourceProfile credential_source=${arg.credential_source}`);
+        logger4?.debug?.(`    ${profile} isCredentialSourceProfile credential_source=${arg.credential_source}`);
       }
       return withProviderProfile;
     }, "isCredentialSourceProfile");
@@ -42144,7 +42144,7 @@ var require_dist_cjs69 = __commonJS({
       clientConfig,
       parentClientConfig,
       profile,
-      logger: logger3
+      logger: logger4
     }) => {
       let token;
       const refreshMessage = `To refresh this SSO session run aws sso login with the corresponding profile.`;
@@ -42158,7 +42158,7 @@ var require_dist_cjs69 = __commonJS({
         } catch (e4) {
           throw new import_property_provider2.CredentialsProviderError(e4.message, {
             tryNextLink: SHOULD_FAIL_CREDENTIAL_CHAIN,
-            logger: logger3
+            logger: logger4
           });
         }
       } else {
@@ -42167,14 +42167,14 @@ var require_dist_cjs69 = __commonJS({
         } catch (e4) {
           throw new import_property_provider2.CredentialsProviderError(`The SSO session associated with this profile is invalid. ${refreshMessage}`, {
             tryNextLink: SHOULD_FAIL_CREDENTIAL_CHAIN,
-            logger: logger3
+            logger: logger4
           });
         }
       }
       if (new Date(token.expiresAt).getTime() - Date.now() <= 0) {
         throw new import_property_provider2.CredentialsProviderError(`The SSO session associated with this profile has expired. ${refreshMessage}`, {
           tryNextLink: SHOULD_FAIL_CREDENTIAL_CHAIN,
-          logger: logger3
+          logger: logger4
         });
       }
       const { accessToken } = token;
@@ -42197,7 +42197,7 @@ var require_dist_cjs69 = __commonJS({
       } catch (e4) {
         throw new import_property_provider2.CredentialsProviderError(e4, {
           tryNextLink: SHOULD_FAIL_CREDENTIAL_CHAIN,
-          logger: logger3
+          logger: logger4
         });
       }
       const {
@@ -42206,7 +42206,7 @@ var require_dist_cjs69 = __commonJS({
       if (!accessKeyId || !secretAccessKey || !sessionToken || !expiration) {
         throw new import_property_provider2.CredentialsProviderError("SSO returns an invalid temporary credential.", {
           tryNextLink: SHOULD_FAIL_CREDENTIAL_CHAIN,
-          logger: logger3
+          logger: logger4
         });
       }
       const credentials = {
@@ -42224,7 +42224,7 @@ var require_dist_cjs69 = __commonJS({
       }
       return credentials;
     }, "resolveSSOCredentials");
-    var validateSsoProfile = /* @__PURE__ */ __name((profile, logger3) => {
+    var validateSsoProfile = /* @__PURE__ */ __name((profile, logger4) => {
       const { sso_start_url, sso_account_id, sso_region, sso_role_name } = profile;
       if (!sso_start_url || !sso_account_id || !sso_region || !sso_role_name) {
         throw new import_property_provider2.CredentialsProviderError(
@@ -42232,7 +42232,7 @@ var require_dist_cjs69 = __commonJS({
             ", "
           )}
 Reference: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html`,
-          { tryNextLink: false, logger: logger3 }
+          { tryNextLink: false, logger: logger4 }
         );
       }
       return profile;
@@ -42351,21 +42351,21 @@ var require_dist_cjs70 = __commonJS({
     var import_shared_ini_file_loader = require_dist_cjs42();
     var import_client3 = (init_client(), __toCommonJS(client_exports));
     var import_property_provider2 = require_dist_cjs23();
-    var resolveCredentialSource = /* @__PURE__ */ __name((credentialSource, profileName, logger3) => {
+    var resolveCredentialSource = /* @__PURE__ */ __name((credentialSource, profileName, logger4) => {
       const sourceProvidersMap = {
         EcsContainer: /* @__PURE__ */ __name(async (options) => {
           const { fromHttp } = await Promise.resolve().then(() => __toESM2(require_dist_cjs50()));
           const { fromContainerMetadata } = await Promise.resolve().then(() => __toESM2(require_dist_cjs49()));
-          logger3?.debug("@aws-sdk/credential-provider-ini - credential_source is EcsContainer");
+          logger4?.debug("@aws-sdk/credential-provider-ini - credential_source is EcsContainer");
           return async () => (0, import_property_provider2.chain)(fromHttp(options ?? {}), fromContainerMetadata(options))().then(setNamedProvider);
         }, "EcsContainer"),
         Ec2InstanceMetadata: /* @__PURE__ */ __name(async (options) => {
-          logger3?.debug("@aws-sdk/credential-provider-ini - credential_source is Ec2InstanceMetadata");
+          logger4?.debug("@aws-sdk/credential-provider-ini - credential_source is Ec2InstanceMetadata");
           const { fromInstanceMetadata } = await Promise.resolve().then(() => __toESM2(require_dist_cjs49()));
           return async () => fromInstanceMetadata(options)().then(setNamedProvider);
         }, "Ec2InstanceMetadata"),
         Environment: /* @__PURE__ */ __name(async (options) => {
-          logger3?.debug("@aws-sdk/credential-provider-ini - credential_source is Environment");
+          logger4?.debug("@aws-sdk/credential-provider-ini - credential_source is Environment");
           const { fromEnv } = await Promise.resolve().then(() => __toESM2(require_dist_cjs48()));
           return async () => fromEnv(options)().then(setNamedProvider);
         }, "Environment")
@@ -42375,25 +42375,25 @@ var require_dist_cjs70 = __commonJS({
       } else {
         throw new import_property_provider2.CredentialsProviderError(
           `Unsupported credential source in profile ${profileName}. Got ${credentialSource}, expected EcsContainer or Ec2InstanceMetadata or Environment.`,
-          { logger: logger3 }
+          { logger: logger4 }
         );
       }
     }, "resolveCredentialSource");
     var setNamedProvider = /* @__PURE__ */ __name((creds) => (0, import_client3.setCredentialFeature)(creds, "CREDENTIALS_PROFILE_NAMED_PROVIDER", "p"), "setNamedProvider");
-    var isAssumeRoleProfile = /* @__PURE__ */ __name((arg, { profile = "default", logger: logger3 } = {}) => {
-      return Boolean(arg) && typeof arg === "object" && typeof arg.role_arn === "string" && ["undefined", "string"].indexOf(typeof arg.role_session_name) > -1 && ["undefined", "string"].indexOf(typeof arg.external_id) > -1 && ["undefined", "string"].indexOf(typeof arg.mfa_serial) > -1 && (isAssumeRoleWithSourceProfile(arg, { profile, logger: logger3 }) || isCredentialSourceProfile(arg, { profile, logger: logger3 }));
+    var isAssumeRoleProfile = /* @__PURE__ */ __name((arg, { profile = "default", logger: logger4 } = {}) => {
+      return Boolean(arg) && typeof arg === "object" && typeof arg.role_arn === "string" && ["undefined", "string"].indexOf(typeof arg.role_session_name) > -1 && ["undefined", "string"].indexOf(typeof arg.external_id) > -1 && ["undefined", "string"].indexOf(typeof arg.mfa_serial) > -1 && (isAssumeRoleWithSourceProfile(arg, { profile, logger: logger4 }) || isCredentialSourceProfile(arg, { profile, logger: logger4 }));
     }, "isAssumeRoleProfile");
-    var isAssumeRoleWithSourceProfile = /* @__PURE__ */ __name((arg, { profile, logger: logger3 }) => {
+    var isAssumeRoleWithSourceProfile = /* @__PURE__ */ __name((arg, { profile, logger: logger4 }) => {
       const withSourceProfile = typeof arg.source_profile === "string" && typeof arg.credential_source === "undefined";
       if (withSourceProfile) {
-        logger3?.debug?.(`    ${profile} isAssumeRoleWithSourceProfile source_profile=${arg.source_profile}`);
+        logger4?.debug?.(`    ${profile} isAssumeRoleWithSourceProfile source_profile=${arg.source_profile}`);
       }
       return withSourceProfile;
     }, "isAssumeRoleWithSourceProfile");
-    var isCredentialSourceProfile = /* @__PURE__ */ __name((arg, { profile, logger: logger3 }) => {
+    var isCredentialSourceProfile = /* @__PURE__ */ __name((arg, { profile, logger: logger4 }) => {
       const withProviderProfile = typeof arg.credential_source === "string" && typeof arg.source_profile === "undefined";
       if (withProviderProfile) {
-        logger3?.debug?.(`    ${profile} isCredentialSourceProfile credential_source=${arg.credential_source}`);
+        logger4?.debug?.(`    ${profile} isCredentialSourceProfile credential_source=${arg.credential_source}`);
       }
       return withProviderProfile;
     }, "isCredentialSourceProfile");
@@ -49548,28 +49548,72 @@ __export(lambda_exports, {
 });
 module.exports = __toCommonJS(lambda_exports);
 
-// utils/response.ts
-var BASIC_HEADERS = {
-  "Content-Type": "application/json"
+// utils/logger.ts
+var CloudWatchLogger = class {
+  formatLog(level, message2, context) {
+    const timestamp = (/* @__PURE__ */ new Date()).toISOString();
+    const logEntry = {
+      timestamp,
+      level,
+      message: message2,
+      ...context && { context }
+    };
+    return JSON.stringify(logEntry);
+  }
+  error(message2, context) {
+    process.stderr.write(this.formatLog("ERROR", message2, context) + "\n");
+  }
+  warn(message2, context) {
+    process.stdout.write(this.formatLog("WARN", message2, context) + "\n");
+  }
+  info(message2, context) {
+    process.stdout.write(this.formatLog("INFO", message2, context) + "\n");
+  }
+  debug(message2, context) {
+    if (process.env.NODE_ENV !== "production") {
+      process.stdout.write(this.formatLog("DEBUG", message2, context) + "\n");
+    }
+  }
 };
-function createResponse(statusCode, body, additionalHeaders = {}) {
+var logger2 = new CloudWatchLogger();
+
+// utils/response.ts
+var ALLOW_ORIGINS = /* @__PURE__ */ new Set(["http://localhost:3002", "https://report-seed.com"]);
+function corsHeaders(origin) {
+  const allowedOrigin = origin && ALLOW_ORIGINS.has(origin) ? origin : "https://report-seed.com";
+  return {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": allowedOrigin,
+    Vary: "Origin",
+    "Access-Control-Allow-Credentials": "true",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "authorization, content-type, x-requested-with",
+    "Access-Control-Max-Age": "86400"
+  };
+}
+function createResponse(statusCode, body, origin, additionalHeaders = {}) {
   return {
     statusCode,
     headers: {
-      ...BASIC_HEADERS,
+      ...corsHeaders(origin),
       ...additionalHeaders
     },
     body: JSON.stringify(body)
   };
 }
-function createErrorResponse(statusCode, code, message2) {
-  console.error(`Error ${statusCode}: ${code} - ${message2}`);
-  return createResponse(statusCode, { code, message: message2 });
+function createErrorResponse(statusCode, code, message2, origin) {
+  logger2.error("API Error Response", {
+    statusCode,
+    code,
+    message: message2
+  });
+  return createResponse(statusCode, { code, message: message2 }, origin);
 }
-function createOptionsResponse() {
+function createOptionsResponse(origin) {
   return {
-    statusCode: 200,
-    headers: BASIC_HEADERS,
+    statusCode: 204,
+    // No Content is more appropriate for OPTIONS
+    headers: corsHeaders(origin),
     body: ""
   };
 }
@@ -55029,7 +55073,10 @@ async function getUserId(event) {
     const userPoolClientId = process.env.USER_POOL_CLIENT_ID;
     const region = process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || "ap-northeast-1";
     if (!userPoolId || !userPoolClientId) {
-      console.error("Missing required environment variables: USER_POOL_ID or USER_POOL_CLIENT_ID");
+      logger2.error("Missing required environment variables for Cognito authentication", {
+        userPoolId: !!userPoolId,
+        userPoolClientId: !!userPoolClientId
+      });
       return null;
     }
     const jwksUrl = `https://cognito-idp.${region}.amazonaws.com/${userPoolId}/.well-known/jwks.json`;
@@ -55040,7 +55087,10 @@ async function getUserId(event) {
         jwksCache2 = createRemoteJWKSet(new URL(jwksUrl));
         jwksCacheExpiry = now + 36e5;
       } catch (jwksError) {
-        console.error("JWKS fetch error:", jwksError);
+        logger2.error("JWKS fetch error", {
+          jwksUrl,
+          error: jwksError instanceof Error ? jwksError.message : String(jwksError)
+        });
         throw jwksError;
       }
     }
@@ -55050,7 +55100,10 @@ async function getUserId(event) {
     });
     return payload.sub;
   } catch (error) {
-    console.error("JWT verification failed:", error.message);
+    logger2.error("JWT verification failed", {
+      error: error.message,
+      path: event.requestContext.http.path
+    });
     return null;
   }
 }
@@ -56169,19 +56222,21 @@ function calculateSentenceScore(sentence) {
 
 // handlers/ai-generate.ts
 async function handleAiGenerate(event) {
+  let userId = null;
+  const origin = event.headers?.origin;
   try {
-    const userId = await getUserId(event);
+    userId = await getUserId(event);
     if (!userId) {
-      return createErrorResponse(401, "Unauthorized", "Valid JWT token required");
+      return createErrorResponse(401, "Unauthorized", "Valid JWT token required", origin);
     }
     const body = JSON.parse(event.body || "{}");
     const validatedData = AiGenerateSchema.parse(body);
     const provider = process.env.AI_PROVIDER || "bedrock";
     if (provider === "openai" && !process.env.OPENAI_API_KEY) {
-      return createErrorResponse(500, "ai_not_configured", "OpenAI API key not configured");
+      return createErrorResponse(500, "ai_not_configured", "OpenAI API key not configured", origin);
     }
     if (provider === "bedrock" && !process.env.BEDROCK_REGION && !process.env.AWS_REGION) {
-      return createErrorResponse(500, "ai_not_configured", "Bedrock region not configured");
+      return createErrorResponse(500, "ai_not_configured", "Bedrock region not configured", origin);
     }
     const status = aiConcurrencyLimiter.getStatus();
     const aiResult = await withConcurrencyControl(async () => {
@@ -56207,42 +56262,42 @@ async function handleAiGenerate(event) {
         }
       );
     });
-    const responseHeaders = {
-      "Content-Type": "application/json",
+    const additionalHeaders = {
       "x-ai-provider": provider,
       "x-concurrency-status": JSON.stringify(status)
     };
-    return {
-      statusCode: 200,
-      headers: responseHeaders,
-      body: JSON.stringify(aiResult)
-    };
+    return createResponse(200, aiResult, origin, additionalHeaders);
   } catch (error) {
     if (error instanceof external_exports.ZodError) {
       return createErrorResponse(
         400,
         "BadRequest",
-        `Validation error: ${error.issues.map((e4) => e4.message).join(", ")}`
+        `Validation error: ${error.issues.map((e4) => e4.message).join(", ")}`,
+        origin
       );
     }
     if (error.statusCode === 503 || error.message?.includes("overload")) {
-      return {
-        statusCode: 503,
-        headers: {
-          "Content-Type": "application/json",
-          "Retry-After": String(error.retryAfter || 2)
-        },
-        body: JSON.stringify({
+      return createResponse(
+        503,
+        {
           code: "service_overloaded",
           message: "AI service is temporarily overloaded. Please retry after a few seconds.",
           retryAfter: error.retryAfter || 2
-        })
-      };
+        },
+        origin,
+        {
+          "Retry-After": String(error.retryAfter || 2)
+        }
+      );
     }
-    console.error("Error in AI generation:", error);
+    logger2.error("Error in AI generation", {
+      error: error instanceof Error ? error.message : String(error),
+      statusCode: error.statusCode,
+      userId
+    });
     const errorMessage = error instanceof Error ? error.message : "Failed to generate AI report";
     const statusCode = error.statusCode || 500;
-    return createErrorResponse(statusCode, "ai_generation_failed", errorMessage);
+    return createErrorResponse(statusCode, "ai_generation_failed", errorMessage, origin);
   }
 }
 
@@ -56326,7 +56381,10 @@ async function queryReports(params) {
     try {
       exclusiveStartKey = JSON.parse(Buffer.from(nextToken, "base64").toString());
     } catch (error) {
-      console.error("\u274C NextToken \u30C7\u30B3\u30FC\u30C9\u30A8\u30E9\u30FC:", error);
+      logger2.error("NextToken decode error", {
+        error: error instanceof Error ? error.message : String(error),
+        nextToken
+      });
       throw new Error("Invalid nextToken");
     }
   }
@@ -56396,8 +56454,9 @@ async function queryReports(params) {
 
 // handlers/reports.ts
 async function handleCreateReport(event) {
+  let userId = null;
   try {
-    const userId = await getUserId(event);
+    userId = await getUserId(event);
     if (!userId) {
       return createErrorResponse(401, "Unauthorized", "Valid JWT token required");
     }
@@ -56409,20 +56468,27 @@ async function handleCreateReport(event) {
     return createResponse(201, { reportId });
   } catch (error) {
     if (error instanceof external_exports.ZodError) {
-      console.error("\u274C \u30D0\u30EA\u30C7\u30FC\u30B7\u30E7\u30F3\u30A8\u30E9\u30FC:", error.issues);
+      logger2.error("Report creation validation error", {
+        error: error.issues,
+        userId
+      });
       return createErrorResponse(
         400,
         "BadRequest",
         `Validation error: ${error.issues.map((e4) => e4.message).join(", ")}`
       );
     }
-    console.error("\u274C \u30EC\u30DD\u30FC\u30C8\u4F5C\u6210\u30A8\u30E9\u30FC:", error);
+    logger2.error("Report creation error", {
+      error: error instanceof Error ? error.message : String(error),
+      userId
+    });
     return createErrorResponse(500, "InternalError", "Failed to create report");
   }
 }
 async function handleGetReports(event) {
+  let userId = null;
   try {
-    const userId = await getUserId(event);
+    userId = await getUserId(event);
     if (!userId) {
       return createErrorResponse(401, "Unauthorized", "Valid JWT token required");
     }
@@ -56451,24 +56517,32 @@ async function handleGetReports(event) {
     return createResponse(200, response);
   } catch (error) {
     if (error instanceof external_exports.ZodError) {
-      console.error("\u274C \u30D0\u30EA\u30C7\u30FC\u30B7\u30E7\u30F3\u30A8\u30E9\u30FC:", error.issues);
+      logger2.error("Reports query validation error", {
+        error: error.issues,
+        userId
+      });
       return createErrorResponse(
         400,
         "BadRequest",
         `Validation error: ${error.issues.map((e4) => e4.message).join(", ")}`
       );
     }
-    console.error("\u274C \u30EC\u30DD\u30FC\u30C8\u53D6\u5F97\u30A8\u30E9\u30FC:", error);
+    logger2.error("Reports query error", {
+      error: error instanceof Error ? error.message : String(error),
+      userId
+    });
     return createErrorResponse(500, "InternalError", "Failed to get reports");
   }
 }
 async function handleGetReport(event) {
+  let userId = null;
+  let reportId;
   try {
-    const userId = await getUserId(event);
+    userId = await getUserId(event);
     if (!userId) {
       return createErrorResponse(401, "Unauthorized", "Valid JWT token required");
     }
-    const reportId = event.pathParameters?.id;
+    reportId = event.pathParameters?.id;
     if (!reportId) {
       return createErrorResponse(400, "BadRequest", "Report ID is required");
     }
@@ -56479,7 +56553,11 @@ async function handleGetReport(event) {
     const apiItem = dynamoToApi(reportItem);
     return createResponse(200, apiItem);
   } catch (error) {
-    console.error("\u274C handleGetReport \u30A8\u30E9\u30FC:", error);
+    logger2.error("Get report error", {
+      error: error instanceof Error ? error.message : String(error),
+      userId,
+      reportId
+    });
     const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
     return createErrorResponse(500, "InternalError", `Failed to get report: ${errorMessage}`);
   }
@@ -56487,12 +56565,14 @@ async function handleGetReport(event) {
 
 // handlers/stats.ts
 async function getStats(event) {
+  let userId = null;
+  let scope = "all";
   try {
-    const userId = await getUserId(event);
+    userId = await getUserId(event);
     if (!userId) {
       return createErrorResponse(401, "UNAUTHORIZED", "Authentication required");
     }
-    const scope = event.queryStringParameters?.scope || "all";
+    scope = event.queryStringParameters?.scope || "all";
     const topN = parseInt(event.queryStringParameters?.topN || "10");
     const tz = event.queryStringParameters?.tz || "Asia/Tokyo";
     if (!["all", "month", "company", "user", "today"].includes(scope)) {
@@ -56558,7 +56638,11 @@ async function getStats(event) {
     };
     return createResponse(200, response);
   } catch (error) {
-    console.error("Stats API error:", error);
+    logger2.error("Stats API error", {
+      error: error instanceof Error ? error.message : String(error),
+      userId,
+      scope
+    });
     return createErrorResponse(500, "INTERNAL_ERROR", "Internal server error");
   }
 }
@@ -56593,7 +56677,7 @@ var handler = async (event, context) => {
       const path = event.requestContext.http.path;
       const routeKey = event.routeKey || `${method} ${path}`;
       if (method === "OPTIONS") {
-        return createOptionsResponse();
+        return createOptionsResponse(event.headers?.origin);
       }
       if (routeKey === "$default" || routeKey === `${method} ${path}`) {
         if (method === "GET" && path === "/health") {

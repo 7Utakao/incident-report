@@ -7,14 +7,18 @@ import { generateAIReport } from '../providers/ai';
 import { withRetry, createRetryableError } from '../utils/retry';
 import { withConcurrencyControl, aiConcurrencyLimiter } from '../utils/concurrency';
 import { preprocessText, getProcessingStats } from '../services/text-processing';
+import { logger } from '../utils/logger';
 
 export async function handleAiGenerate(
   event: APIGatewayProxyEventV2,
 ): Promise<APIGatewayProxyResultV2> {
+  let userId: string | null = null;
+  const origin = event.headers?.origin;
+
   try {
-    const userId = await getUserId(event);
+    userId = await getUserId(event);
     if (!userId) {
-      return createErrorResponse(401, 'Unauthorized', 'Valid JWT token required');
+      return createErrorResponse(401, 'Unauthorized', 'Valid JWT token required', origin);
     }
 
     const body = JSON.parse(event.body || '{}');
@@ -24,11 +28,11 @@ export async function handleAiGenerate(
     const provider = process.env.AI_PROVIDER || 'bedrock';
 
     if (provider === 'openai' && !process.env.OPENAI_API_KEY) {
-      return createErrorResponse(500, 'ai_not_configured', 'OpenAI API key not configured');
+      return createErrorResponse(500, 'ai_not_configured', 'OpenAI API key not configured', origin);
     }
 
     if (provider === 'bedrock' && !process.env.BEDROCK_REGION && !process.env.AWS_REGION) {
-      return createErrorResponse(500, 'ai_not_configured', 'Bedrock region not configured');
+      return createErrorResponse(500, 'ai_not_configured', 'Bedrock region not configured', origin);
     }
 
     // Log concurrency status
@@ -68,17 +72,12 @@ export async function handleAiGenerate(
     });
 
     // Add processing metadata to response
-    const responseHeaders: Record<string, string> = {
-      'Content-Type': 'application/json',
+    const additionalHeaders: Record<string, string> = {
       'x-ai-provider': provider,
       'x-concurrency-status': JSON.stringify(status),
     };
 
-    return {
-      statusCode: 200,
-      headers: responseHeaders,
-      body: JSON.stringify(aiResult),
-    };
+    return createResponse(200, aiResult, origin, additionalHeaders);
   } catch (error: any) {
     // Handle validation errors
     if (error instanceof z.ZodError) {
@@ -86,30 +85,35 @@ export async function handleAiGenerate(
         400,
         'BadRequest',
         `Validation error: ${error.issues.map((e: any) => e.message).join(', ')}`,
+        origin,
       );
     }
 
     // Handle service overload (503 with Retry-After)
     if (error.statusCode === 503 || error.message?.includes('overload')) {
-      return {
-        statusCode: 503,
-        headers: {
-          'Content-Type': 'application/json',
-          'Retry-After': String(error.retryAfter || 2),
-        },
-        body: JSON.stringify({
+      return createResponse(
+        503,
+        {
           code: 'service_overloaded',
           message: 'AI service is temporarily overloaded. Please retry after a few seconds.',
           retryAfter: error.retryAfter || 2,
-        }),
-      };
+        },
+        origin,
+        {
+          'Retry-After': String(error.retryAfter || 2),
+        },
+      );
     }
 
     // Handle other errors
-    console.error('Error in AI generation:', error);
+    logger.error('Error in AI generation', {
+      error: error instanceof Error ? error.message : String(error),
+      statusCode: error.statusCode,
+      userId,
+    });
     const errorMessage = error instanceof Error ? error.message : 'Failed to generate AI report';
     const statusCode = error.statusCode || 500;
 
-    return createErrorResponse(statusCode, 'ai_generation_failed', errorMessage);
+    return createErrorResponse(statusCode, 'ai_generation_failed', errorMessage, origin);
   }
 }

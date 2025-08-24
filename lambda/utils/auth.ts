@@ -1,5 +1,6 @@
 import type { APIGatewayProxyEventV2 } from 'aws-lambda';
 import { jwtVerify, createRemoteJWKSet } from 'jose';
+import { logger } from './logger';
 
 // Cognito JWKSエンドポイントのキャッシュ
 let jwksCache: any = null;
@@ -32,7 +33,10 @@ export async function getUserId(event: APIGatewayProxyEventV2): Promise<string |
 
     // 必要な環境変数が設定されているかチェック
     if (!userPoolId || !userPoolClientId) {
-      console.error('Missing required environment variables: USER_POOL_ID or USER_POOL_CLIENT_ID');
+      logger.error('Missing required environment variables for Cognito authentication', {
+        userPoolId: !!userPoolId,
+        userPoolClientId: !!userPoolClientId,
+      });
       return null;
     }
 
@@ -46,7 +50,10 @@ export async function getUserId(event: APIGatewayProxyEventV2): Promise<string |
         jwksCache = createRemoteJWKSet(new URL(jwksUrl));
         jwksCacheExpiry = now + 3600000; // 1時間キャッシュ
       } catch (jwksError) {
-        console.error('JWKS fetch error:', jwksError);
+        logger.error('JWKS fetch error', {
+          jwksUrl,
+          error: jwksError instanceof Error ? jwksError.message : String(jwksError),
+        });
         throw jwksError;
       }
     }
@@ -59,7 +66,10 @@ export async function getUserId(event: APIGatewayProxyEventV2): Promise<string |
 
     return payload.sub as string;
   } catch (error: any) {
-    console.error('JWT verification failed:', error.message);
+    logger.error('JWT verification failed', {
+      error: error.message,
+      path: event.requestContext.http.path,
+    });
     return null;
   }
 }
@@ -72,7 +82,9 @@ export function decodeNextToken(nextToken: string): any {
   try {
     return JSON.parse(Buffer.from(nextToken, 'base64').toString());
   } catch (error) {
-    console.error('Failed to decode nextToken:', error);
+    logger.error('Failed to decode nextToken', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return null;
   }
 }
