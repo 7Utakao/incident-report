@@ -21,9 +21,9 @@ export default defineNuxtConfig({
       apiUrl: process.env.NUXT_PUBLIC_API_URL || 'http://localhost:3001',
       apiBase:
         process.env.NUXT_PUBLIC_API_BASE ||
-        'https://7borjnekgb2x6fd5prto4m4uyy0ilhid.lambda-url.ap-northeast-1.on.aws',
-      userPoolId: process.env.NUXT_PUBLIC_USER_POOL_ID || 'ap-northeast-1_IW2fJAMJP',
-      userPoolClientId: process.env.NUXT_PUBLIC_USER_POOL_CLIENT_ID || '2rn5rvtlrgfi60bi3anll7aqbs',
+        'https://your-lambda-url.lambda-url.ap-northeast-1.on.aws',
+      userPoolId: process.env.NUXT_PUBLIC_USER_POOL_ID || 'ap-northeast-1_XXXXXXXXX',
+      userPoolClientId: process.env.NUXT_PUBLIC_USER_POOL_CLIENT_ID || 'your-client-id',
       awsRegion: process.env.NUXT_PUBLIC_AWS_REGION || 'ap-northeast-1',
     },
   },

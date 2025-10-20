@@ -1,0 +1,28 @@
+# Code Owners
+# これらのオーナーは、リポジトリ内の全てのファイルに対するコードレビュー権限を持ちます
+
+# デフォルトオーナー
+* @7Utakao
+
+# フロントエンド
+/components/ @7Utakao
+/pages/ @7Utakao
+/layouts/ @7Utakao
+/composables/ @7Utakao
+
+# バックエンド
+/lambda/ @7Utakao
+
+# インフラストラクチャ
+/amplify.yml @7Utakao
+/.github/ @7Utakao
+
+# ドキュメント
+/docs/ @7Utakao
+README.md @7Utakao
+SECURITY.md @7Utakao
+
+# 設定ファイル
+*.config.ts @7Utakao
+*.config.js @7Utakao
+package.json @7Utakao
