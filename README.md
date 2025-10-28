@@ -138,6 +138,7 @@ npm test
 - [システム設計](docs/system-design.md)
 - [画面仕様書](docs/screen-spec.md)
 - [デプロイ手順](docs/デプロイ設定手順書.md)
+- [Lambda Function URL 権限モデル変更対応](docs/lambda-function-url-permission-update.md) ⚠️ 2026 年 11 月 1 日期限
 
 ## 🤝 Contributing
 
