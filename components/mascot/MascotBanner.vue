@@ -47,9 +47,9 @@ const currentIndex = ref(0);
 let timer: NodeJS.Timeout | null = null;
 
 const displayMessage = computed(() => {
-  if (props.isLeveledUp) {
-    return COPY.levelUpMessage;
-  }
+  // if (props.isLeveledUp) {
+  //   return COPY.levelUpMessage;
+  // }
 
   const template = COPY.mascotLines[currentIndex.value] || COPY.mascotLines[0];
   return template
